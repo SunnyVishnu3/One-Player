@@ -49,6 +49,9 @@ dependencies {
 
     implementation(libs.androidx.hilt.navigation.compose)
 
+    implementation(libs.kyant.backdrop)
+    implementation(libs.kyant.shapes)
+
     testImplementation(libs.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.test.ext)

@@ -52,6 +52,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtimeCompose)
 
+    implementation(libs.colorpicker.compose)
+
     implementation(libs.aboutlibraries.core)
 
     // Hilt 依赖

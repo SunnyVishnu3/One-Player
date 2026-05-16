@@ -44,7 +44,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import one.only.player.core.ui.components.LiquidButton
 import one.only.player.core.ui.designsystem.NextIcons
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import one.only.player.feature.player.LocalShouldUseClassicPlayerIcons
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -68,6 +75,21 @@ fun PlayerButton(
     val viewConfiguration = LocalViewConfiguration.current
     val hapticFeedback = LocalHapticFeedback.current
     val isCustomizingButton = label != null
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
+
+    if (backdrop != null && !isCustomizingButton && !isOutlineOnly) {
+        LiquidButton(
+            onClick = onClick,
+            modifier = modifier.size(buttonSize),
+            isInteractive = isInteractive,
+            tint = Color(preferences.buttonColor),
+            surfaceColor = Color.White.copy(alpha = 0.1f)
+        ) {
+            content()
+        }
+        return
+    }
 
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongClick by rememberUpdatedState(onLongClick)
@@ -159,7 +181,9 @@ fun PlayerButton(
                     IconButton(
                         onClick = {},
                         enabled = isEnabled,
-                        modifier = Modifier.size(buttonSize).then(if (isOutlineOnly) outlineModifier else Modifier),
+                        modifier = Modifier
+                            .size(buttonSize)
+                            .then(if (isOutlineOnly) outlineModifier else Modifier),
                         interactionSource = interactionSource,
                         content = buttonContent,
                     )
@@ -168,11 +192,17 @@ fun PlayerButton(
                 FilledTonalIconButton(
                     onClick = {},
                     enabled = isEnabled,
-                    modifier = Modifier.size(buttonSize).then(if (isOutlineOnly) outlineModifier else Modifier),
+                    modifier = Modifier
+                        .size(buttonSize)
+                        .then(if (isOutlineOnly) outlineModifier else Modifier),
                     interactionSource = interactionSource,
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = if (isOutlineOnly) colorScheme.surface.copy(alpha = 0f) else colorScheme.primary,
-                        contentColor = if (isOutlineOnly) colorScheme.primary else colorScheme.onPrimary,
+                        containerColor = when {
+                            isOutlineOnly -> colorScheme.surface.copy(alpha = 0f)
+                            backdrop != null -> Color(preferences.buttonColor).copy(alpha = preferences.tintOpacity)
+                            else -> colorScheme.primary
+                        },
+                        contentColor = if (isOutlineOnly || backdrop != null) colorScheme.primary else colorScheme.onPrimary,
                         disabledContainerColor = colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
                         disabledContentColor = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     ),

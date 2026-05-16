@@ -13,8 +13,14 @@ fun NavController.navigateToAppearancePreferences(navOptions: NavOptions? = navO
     this.navigate(appearancePreferencesNavigationRoute, navOptions)
 }
 
-fun NavGraphBuilder.appearancePreferencesScreen(onNavigateUp: () -> Unit) {
+fun NavGraphBuilder.appearancePreferencesScreen(
+    onNavigateUp: () -> Unit,
+    onLiquidGlassClick: () -> Unit,
+) {
     composable(route = appearancePreferencesNavigationRoute) {
-        AppearancePreferencesScreen(onNavigateUp = onNavigateUp)
+        AppearancePreferencesScreen(
+            onNavigateUp = onNavigateUp,
+            onLiquidGlassClick = onLiquidGlassClick,
+        )
     }
 }

@@ -39,6 +39,7 @@ data class ApplicationPreferences(
     val shouldCheckForUpdatesOnStartup: Boolean = false,
     val manualVideoPaths: List<String> = emptyList(),
     val pendingExternalVideoPaths: List<String> = emptyList(),
+    val liquidGlassPreferences: LiquidGlassPreferences = LiquidGlassPreferences(),
 ) {
 
     fun isPathExcluded(path: String): Boolean {
@@ -69,3 +70,21 @@ data class ApplicationPreferences(
 }
 
 private fun Float.roundToStep(step: Float): Float = (this / step).roundToInt() * step
+
+@Serializable
+data class LiquidGlassPreferences(
+    val isEnabled: Boolean = false,
+    val isLensEnabled: Boolean = true,
+    val blur: Float = 0f,
+    val refractionHeight: Float = 12f,
+    val refractionAmount: Float = 24f,
+    val chromaticAberration: Float = 0.5f,
+    val rimLighting: Boolean = true,
+    val tintColor: Long = 0xFFFFFFFF,
+    val tintOpacity: Float = 0.1f,
+    val shapeRoundness: Float = 16f,
+    val iconRoundness: Float = 12f,
+    val parallax: Float = 0.1f,
+    val buttonColor: Long = 0xFFFF5349,
+    val sliderColor: Long = 0xFF000080,
+)

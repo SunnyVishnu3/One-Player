@@ -259,6 +259,7 @@ class PlayerActivity : AppCompatActivity() {
                     ThemeConfig.ON -> true
                 },
                 shouldUseDynamicColor = uiState.applicationPreferences.shouldUseDynamicColors,
+                liquidGlassPreferences = uiState.applicationPreferences.liquidGlassPreferences,
             ) {
                 MediaPlayerScreen(
                     modifier = Modifier.semantics {

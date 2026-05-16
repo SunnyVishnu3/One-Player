@@ -102,6 +102,10 @@ import one.only.player.feature.videopicker.composables.VideoInfoDialog
 import one.only.player.feature.videopicker.navigation.MediaPickerScreenMode
 import one.only.player.feature.videopicker.state.SelectedFolder
 import one.only.player.feature.videopicker.state.SelectedVideo
+import androidx.compose.ui.graphics.Color
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
 import one.only.player.feature.videopicker.state.rememberSelectionManager
 
 @Composable
@@ -754,6 +758,7 @@ private enum class MediaPickerDeleteAction {
     PermanentlyDelete,
 }
 
+
 @Composable
 private fun SelectionActionsSheet(
     shouldShowSelectionActionsSheet: Boolean,
@@ -774,6 +779,8 @@ private fun SelectionActionsSheet(
     val frozenShowRename = rememberUpdatedStateWhenVisible(shouldShowSelectionActionsSheet, shouldShowRenameAction)
     val frozenShowInfo = rememberUpdatedStateWhenVisible(shouldShowSelectionActionsSheet, shouldShowInfoAction)
     val frozenShowExclude = rememberUpdatedStateWhenVisible(shouldShowSelectionActionsSheet, shouldShowExcludeAction)
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
 
     AnimatedVisibility(
         visible = shouldShowSelectionActionsSheet,
@@ -788,8 +795,18 @@ private fun SelectionActionsSheet(
                 .padding(top = 6.dp, bottom = 24.dp),
         ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.96f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .liquidGlass(
+                        backdrop = backdrop,
+                        preferences = preferences,
+                        shape = { RoundedCornerShape(999.dp) }
+                    ),
+                color = if (backdrop != null) {
+                    androidx.compose.ui.graphics.Color(preferences.tintColor).copy(alpha = preferences.tintOpacity)
+                } else {
+                    MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.96f)
+                },
                 shape = RoundedCornerShape(999.dp),
                 shadowElevation = 2.dp,
                 tonalElevation = 0.dp,

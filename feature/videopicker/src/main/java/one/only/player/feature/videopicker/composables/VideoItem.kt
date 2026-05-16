@@ -47,6 +47,11 @@ import one.only.player.core.ui.components.NextSegmentedListItem
 import one.only.player.core.ui.designsystem.NextIcons
 import one.only.player.core.ui.theme.OnlyPlayerTheme
 
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 @Composable
 fun VideoItem(
     video: Video,
@@ -233,9 +238,16 @@ private fun ThumbnailView(
     preferences: ApplicationPreferences,
 ) {
     val context = LocalContext.current
+    val backdrop = LocalLayerBackdrop.current
+    val liquidPrefs = LocalLiquidGlassPreferences.current
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
+            .liquidGlass(
+                backdrop = backdrop,
+                preferences = liquidPrefs,
+                shape = { RoundedCornerShape(8.dp) }
+            )
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
             .aspectRatio(16f / 10f),
     ) {

@@ -136,6 +136,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.smbj)
 
+    implementation(libs.profileinstaller)
+
     testImplementation(libs.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.test.ext)

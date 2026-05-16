@@ -1,6 +1,7 @@
 package one.only.player.core.ui.theme
 
 import android.os.Build
+import one.only.player.core.model.LiquidGlassPreferences
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +11,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import one.only.player.core.ui.components.LiquidGlassProvider
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -243,6 +245,7 @@ private val highContrastDarkColorScheme = darkColorScheme(
 fun OnlyPlayerTheme(
     shouldUseDarkTheme: Boolean = isSystemInDarkTheme(),
     shouldUseDynamicColor: Boolean = true,
+    liquidGlassPreferences: LiquidGlassPreferences = LiquidGlassPreferences(),
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -261,8 +264,11 @@ fun OnlyPlayerTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content,
-    )
+    ) {
+        LiquidGlassProvider(preferences = liquidGlassPreferences) {
+            content()
+        }
+    }
 }
 
 @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)

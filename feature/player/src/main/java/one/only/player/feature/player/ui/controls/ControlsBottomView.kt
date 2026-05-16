@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +64,13 @@ import one.only.player.core.model.VideoContentScale
 import one.only.player.core.ui.R
 import one.only.player.core.ui.designsystem.NextIcons
 import one.only.player.core.ui.extensions.copy
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+import one.only.player.core.ui.components.LiquidSlider
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import one.only.player.feature.player.AnimatedPlayerControlPlacement
 import one.only.player.feature.player.LocalControlsVisibilityState
 import one.only.player.feature.player.buttons.PlayerButton
@@ -87,6 +95,9 @@ fun ControlsBottomView(
     pendingSeekPosition: Long?,
     itemBounds: MutableMap<PlayerControl, Rect>,
     zoneBounds: MutableMap<PlayerControlZone, Rect>,
+    visiblePlayerControls: Set<PlayerControl>,
+    onSeek: (Long) -> Unit,
+    onSeekEnd: () -> Unit,
     onPlaylistClick: () -> Unit,
     onPlaybackSpeedClick: () -> Unit,
     onAudioClick: () -> Unit,
@@ -114,10 +125,9 @@ fun ControlsBottomView(
     onControlDragStarted: (PlayerControl) -> Unit = {},
     onControlDragMoved: (PlayerControl, Offset) -> Unit = { _, _ -> },
     onControlDragCancelled: (PlayerControl) -> Unit = {},
-    visiblePlayerControls: Set<PlayerControl>,
-    onSeek: (Long) -> Unit,
-    onSeekEnd: () -> Unit,
 ) {
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
     val displayedPosition = pendingSeekPosition ?: mediaPresentationState.position
@@ -137,6 +147,10 @@ fun ControlsBottomView(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             var shouldShowPendingPosition by rememberSaveable { mutableStateOf(false) }
+            val displayedPendingPositionText = when (shouldShowPendingPosition) {
+                true -> "-${displayedPendingPosition.milliseconds.formatted()}"
+                false -> displayedPosition.milliseconds.formatted()
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -145,10 +159,7 @@ fun ControlsBottomView(
                 },
             ) {
                 Text(
-                    text = when (shouldShowPendingPosition) {
-                        true -> "-${displayedPendingPosition.milliseconds.formatted()}"
-                        false -> displayedPosition.milliseconds.formatted()
-                    },
+                    text = displayedPendingPositionText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                 )
@@ -175,19 +186,41 @@ fun ControlsBottomView(
                 Icon(
                     painter = painterResource(R.drawable.ic_screen_rotation),
                     contentDescription = "btn_rotate",
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
-        PlayerSeekbar(
-            position = displayedPosition.toFloat(),
-            duration = mediaPresentationState.duration.toFloat(),
-            onSeek = {
-                controlsVisibilityState?.showControls()
-                onSeek(it.toLong())
-            },
-            onSeekFinished = { onSeekEnd() },
-        )
+        if (backdrop != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .height(40.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MaterialYouSlider(
+                    modifier = Modifier.weight(1f),
+                    value = displayedPosition.toFloat(),
+                    valueRange = 0f..mediaPresentationState.duration.toFloat(),
+                    onValueChange = {
+                        controlsVisibilityState?.showControls()
+                        onSeek(it.toLong())
+                    },
+                    onValueChangeFinished = { onSeekEnd() },
+                )
+            }
+        } else {
+            PlayerSeekbar(
+                position = displayedPosition.toFloat(),
+                duration = mediaPresentationState.duration.toFloat(),
+                onSeek = {
+                    controlsVisibilityState?.showControls()
+                    onSeek(it.toLong())
+                },
+                onSeekFinished = { onSeekEnd() },
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -307,79 +340,92 @@ private fun MaterialYouSlider(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val interactionSource = remember { MutableInteractionSource() }
-    val trackHeight = 8.dp
-    val thumbWidth = 4.dp
-    val trackThumbGapWidth = 12.dp
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
 
-    Slider(
-        value = value,
-        valueRange = valueRange,
-        onValueChange = onValueChange,
-        onValueChangeFinished = onValueChangeFinished,
-        interactionSource = interactionSource,
-        modifier = modifier.height(24.dp).semantics { contentDescription = "slider_seek" },
-        track = { sliderState ->
-            val disabledAlpha = 0.4f
+    if (backdrop != null) {
+        LiquidSlider(
+            value = { value },
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            modifier = modifier,
+            accentColor = Color(preferences.sliderColor)
+        )
+    } else {
+        val primaryColor = MaterialTheme.colorScheme.primary
+        val interactionSource = remember { MutableInteractionSource() }
+        val trackHeight = 8.dp
+        val thumbWidth = 4.dp
+        val trackThumbGapWidth = 12.dp
 
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(trackHeight),
-            ) {
-                val min = sliderState.valueRange.start
-                val max = sliderState.valueRange.endInclusive
-                val range = (max - min).takeIf { it > 0f } ?: 1f
-                val playedFraction = ((sliderState.value - min) / range).coerceIn(0f, 1f)
-                val playedPixels = size.width * playedFraction
+        Slider(
+            value = value,
+            valueRange = valueRange,
+            onValueChange = onValueChange,
+            onValueChangeFinished = onValueChangeFinished,
+            interactionSource = interactionSource,
+            modifier = modifier.height(24.dp).semantics { contentDescription = "slider_seek" },
+            track = { sliderState ->
+                val disabledAlpha = 0.4f
 
-                val endCornerRadius = size.height / 2f
-                val insideCornerRadius = 2.dp.toPx()
-                val gapHalf = trackThumbGapWidth.toPx() / 2f
-                val leftEnd = (playedPixels - gapHalf).coerceIn(0f, size.width)
-                val rightStart = (playedPixels + gapHalf).coerceIn(0f, size.width)
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(trackHeight),
+                ) {
+                    val min = sliderState.valueRange.start
+                    val max = sliderState.valueRange.endInclusive
+                    val range = (max - min).takeIf { it > 0f } ?: 1f
+                    val playedFraction = ((sliderState.value - min) / range).coerceIn(0f, 1f)
+                    val playedPixels = size.width * playedFraction
 
-                if (leftEnd > 0f) {
-                    drawRoundedRect(
-                        offset = Offset(0f, 0f),
-                        size = Size(leftEnd, size.height),
-                        color = primaryColor.copy(alpha = disabledAlpha),
-                        startCornerRadius = endCornerRadius,
-                        endCornerRadius = insideCornerRadius,
-                    )
+                    val endCornerRadius = size.height / 2f
+                    val insideCornerRadius = 2.dp.toPx()
+                    val gapHalf = trackThumbGapWidth.toPx() / 2f
+                    val leftEnd = (playedPixels - gapHalf).coerceIn(0f, size.width)
+                    val rightStart = (playedPixels + gapHalf).coerceIn(0f, size.width)
+
+                    if (leftEnd > 0f) {
+                        drawRoundedRect(
+                            offset = Offset(0f, 0f),
+                            size = Size(leftEnd, size.height),
+                            color = primaryColor.copy(alpha = disabledAlpha),
+                            startCornerRadius = endCornerRadius,
+                            endCornerRadius = insideCornerRadius,
+                        )
+                    }
+
+                    if (rightStart < size.width) {
+                        drawRoundedRect(
+                            offset = Offset(rightStart, 0f),
+                            size = Size(size.width - rightStart, size.height),
+                            color = primaryColor.copy(alpha = disabledAlpha),
+                            startCornerRadius = insideCornerRadius,
+                            endCornerRadius = endCornerRadius,
+                        )
+                    }
+
+                    if (leftEnd > 0f) {
+                        drawRoundedRect(
+                            offset = Offset(0f, 0f),
+                            size = Size(leftEnd, size.height),
+                            color = primaryColor,
+                            startCornerRadius = endCornerRadius,
+                            endCornerRadius = insideCornerRadius,
+                        )
+                    }
                 }
-
-                if (rightStart < size.width) {
-                    drawRoundedRect(
-                        offset = Offset(rightStart, 0f),
-                        size = Size(size.width - rightStart, size.height),
-                        color = primaryColor.copy(alpha = disabledAlpha),
-                        startCornerRadius = insideCornerRadius,
-                        endCornerRadius = endCornerRadius,
-                    )
-                }
-
-                if (leftEnd > 0f) {
-                    drawRoundedRect(
-                        offset = Offset(0f, 0f),
-                        size = Size(leftEnd, size.height),
-                        color = primaryColor,
-                        startCornerRadius = endCornerRadius,
-                        endCornerRadius = insideCornerRadius,
-                    )
-                }
-            }
-        },
-        thumb = {
-            Box(
-                modifier = Modifier
-                    .width(thumbWidth)
-                    .height(20.dp)
-                    .background(primaryColor, CircleShape),
-            )
-        },
-    )
+            },
+            thumb = {
+                Box(
+                    modifier = Modifier
+                        .width(thumbWidth)
+                        .height(20.dp)
+                        .background(primaryColor, CircleShape),
+                )
+            },
+        )
+    }
 }
 
 private fun DrawScope.drawRoundedRect(

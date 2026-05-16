@@ -121,6 +121,10 @@ import one.only.player.feature.player.ui.SubtitleConfiguration
 import one.only.player.feature.player.ui.VerticalProgressView
 import one.only.player.feature.player.ui.controls.ControlsBottomView
 import one.only.player.feature.player.ui.controls.ControlsTopView
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+import one.only.player.core.ui.components.liquidGlassBackground
 import one.only.player.feature.player.ui.controls.PlayerCustomizableControlButton
 
 private const val TAG = "MediaPlayerScreen"
@@ -667,7 +671,10 @@ internal fun MediaPlayerScreen(
                         ?.let { with(LocalDensity.current) { it.toDp() } }
                         ?: 0.dp,
                 ) + 16.dp
+                val backdrop = LocalLayerBackdrop.current
+                val liquidPrefs = LocalLiquidGlassPreferences.current
                 PlayerContentFrame(
+                    modifier = Modifier.liquidGlassBackground(backdrop),
                     player = player,
                     pictureInPictureState = pictureInPictureState,
                     controlsVisibilityState = controlsVisibilityState,

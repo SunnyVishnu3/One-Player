@@ -39,6 +39,11 @@ import one.only.player.core.ui.R
 import one.only.player.core.ui.components.NextSegmentedListItem
 import one.only.player.core.ui.theme.OnlyPlayerTheme
 
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 @Composable
 fun FolderItem(
     folder: Folder,
@@ -112,7 +117,17 @@ private fun FolderListItem(
         onClick = onClick,
         onLongClick = onLongClick,
         leadingContent = {
-            Box(modifier = Modifier.padding(horizontal = 8.dp)) {
+            val backdrop = LocalLayerBackdrop.current
+            val liquidPrefs = LocalLiquidGlassPreferences.current
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .liquidGlass(
+                        backdrop = backdrop,
+                        preferences = liquidPrefs,
+                        shape = { RoundedCornerShape(8.dp) }
+                    )
+            ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.folder_thumb),
                     contentDescription = "",
@@ -219,8 +234,16 @@ private fun FolderGridItem(
         onClick = onClick,
         onLongClick = onLongClick,
         content = {
+            val backdrop = LocalLayerBackdrop.current
+            val liquidPrefs = LocalLiquidGlassPreferences.current
             Column(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .liquidGlass(
+                        backdrop = backdrop,
+                        preferences = liquidPrefs,
+                        shape = { RoundedCornerShape(8.dp) }
+                    ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

@@ -73,6 +73,9 @@ dependencies {
     implementation(libs.github.anilbeesetti.nextlib.mediainfo)
     implementation(libs.github.peerless2012.ass.media)
 
+    implementation(libs.kyant.backdrop)
+    implementation(libs.kyant.shapes)
+
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
     implementation(libs.smbj)

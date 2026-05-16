@@ -12,6 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.ui.graphics.Color
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import androidx.compose.foundation.shape.RoundedCornerShape
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PreferenceSlider(
@@ -30,6 +40,8 @@ fun PreferenceSlider(
     onValueChangeFinished: () -> Unit = {},
     trailingContent: @Composable () -> Unit = {},
 ) {
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
     NextSegmentedListItem(
         modifier = modifier,
         onClick = {},
@@ -51,14 +63,24 @@ fun PreferenceSlider(
                 description?.let {
                     Text(text = description)
                 }
-                Slider(
-                    modifier = sliderModifier.fillMaxWidth(),
-                    enabled = isSliderEnabled,
-                    value = value,
-                    valueRange = valueRange,
-                    onValueChange = onValueChange,
-                    onValueChangeFinished = onValueChangeFinished,
-                )
+                if (backdrop != null) {
+                    LiquidSlider(
+                        value = { value },
+                        onValueChange = onValueChange,
+                        valueRange = valueRange,
+                        modifier = sliderModifier,
+                        accentColor = Color(preferences.sliderColor)
+                    )
+                } else {
+                    Slider(
+                        modifier = sliderModifier.fillMaxWidth(),
+                        enabled = isSliderEnabled,
+                        value = value,
+                        valueRange = valueRange,
+                        onValueChange = onValueChange,
+                        onValueChangeFinished = onValueChangeFinished,
+                    )
+                }
             }
         },
         content = {

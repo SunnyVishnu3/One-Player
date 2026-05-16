@@ -34,8 +34,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import one.only.player.core.ui.extensions.withBottomFallback
 import one.only.player.core.ui.theme.OnlyPlayerTheme
+
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
 
 @Composable
 fun BoxScope.OverlayView(
@@ -52,6 +57,8 @@ fun BoxScope.OverlayView(
     val endPadding = WindowInsets.safeDrawing
         .asPaddingValues()
         .calculateEndPadding(layoutDirection)
+    val backdrop = LocalLayerBackdrop.current
+    val liquidPrefs = LocalLiquidGlassPreferences.current
 
     AnimatedVisibility(
         modifier = Modifier.align(
@@ -66,7 +73,7 @@ fun BoxScope.OverlayView(
         exit = if (configuration.isPortrait) slideOutVertically { it } else slideOutHorizontally { it },
     ) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             modifier = modifier
                 .then(
                     if (testTag != null) {
@@ -87,7 +94,13 @@ fun BoxScope.OverlayView(
                             .fillMaxWidth(0.45f)
                             .fillMaxHeight()
                     },
+                )
+                .liquidGlass(
+                    backdrop = backdrop,
+                    preferences = liquidPrefs,
+                    shape = { RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) }
                 ),
+            color = if (backdrop != null) Color(liquidPrefs.tintColor).copy(alpha = liquidPrefs.tintOpacity) else MaterialTheme.colorScheme.surface,
         ) {
             Column(
                 modifier = Modifier

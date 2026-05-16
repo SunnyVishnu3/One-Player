@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.dp
 import one.only.player.core.ui.R
 import one.only.player.core.ui.theme.OnlyPlayerTheme
 
+import one.only.player.core.ui.components.LocalLayerBackdrop
+import one.only.player.core.ui.components.LocalLiquidGlassPreferences
+import one.only.player.core.ui.components.liquidGlass
+
 private const val NORMAL_MAX_PERCENTAGE = 100
 
 @Composable
@@ -42,12 +46,18 @@ fun VerticalProgressView(
     val normalizedValue = value.coerceIn(0, maxValue)
     val fillFraction = normalizedValue.toFloat() / maxValue.toFloat()
     val isBoostActive = maxValue > NORMAL_MAX_PERCENTAGE && value > NORMAL_MAX_PERCENTAGE
+    val backdrop = LocalLayerBackdrop.current
+    val preferences = LocalLiquidGlassPreferences.current
 
     Column(
         modifier = modifier
             .heightIn(max = 250.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.background)
+            .liquidGlass(
+                backdrop = backdrop,
+                preferences = preferences,
+                shape = { CircleShape }
+            )
+            .background(if (backdrop != null) Color.White.copy(alpha = 0.1f) else MaterialTheme.colorScheme.background)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -59,7 +69,7 @@ fun VerticalProgressView(
             BasicText(
                 text = normalizedValue.toString(),
                 style = MaterialTheme.typography.labelLarge.copy(
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = if (backdrop != null) Color.White else MaterialTheme.colorScheme.onBackground,
                 ),
                 autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
             )
@@ -69,14 +79,14 @@ fun VerticalProgressView(
                 .weight(1f)
                 .width(width)
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(if (backdrop != null) Color.White.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.BottomCenter,
         ) {
             Box(
                 modifier = Modifier
                     .width(width)
                     .fillMaxHeight(fillFraction)
-                    .background(if (isBoostActive) boostColor else MaterialTheme.colorScheme.primary),
+                    .background(if (isBoostActive) boostColor else if (backdrop != null) Color.White else MaterialTheme.colorScheme.primary),
             )
         }
         Box(
@@ -86,7 +96,7 @@ fun VerticalProgressView(
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onBackground,
+                tint = if (backdrop != null) Color.White else MaterialTheme.colorScheme.onBackground,
             )
         }
     }

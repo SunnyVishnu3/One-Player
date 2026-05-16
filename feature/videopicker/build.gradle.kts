@@ -57,6 +57,9 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+    implementation(libs.kyant.backdrop)
+    implementation(libs.kyant.shapes)
+
     // Hilt 依赖
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

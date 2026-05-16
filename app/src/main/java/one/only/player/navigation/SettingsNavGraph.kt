@@ -12,6 +12,8 @@ import one.only.player.settings.navigation.folderPreferencesScreen
 import one.only.player.settings.navigation.generalPreferencesScreen
 import one.only.player.settings.navigation.gesturePreferencesScreen
 import one.only.player.settings.navigation.librariesScreen
+import one.only.player.settings.navigation.liquidGlassPreferencesScreen
+import one.only.player.settings.navigation.navigateToLiquidGlassPreferences
 import one.only.player.settings.navigation.logsScreen
 import one.only.player.settings.navigation.mediaLibraryPreferencesScreen
 import one.only.player.settings.navigation.navigateToAboutPreferences
@@ -62,6 +64,10 @@ fun NavGraphBuilder.settingsNavGraph(
             },
         )
         appearancePreferencesScreen(
+            onNavigateUp = navController::navigateUp,
+            onLiquidGlassClick = navController::navigateToLiquidGlassPreferences,
+        )
+        liquidGlassPreferencesScreen(
             onNavigateUp = navController::navigateUp,
         )
         mediaLibraryPreferencesScreen(

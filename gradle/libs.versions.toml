@@ -29,9 +29,13 @@ kotlinxSerializationJson = "1.11.0"
 ksp = "2.3.8"
 ktlint = "14.2.0"
 libassAndroid = "0.4.0"
+colorpicker-compose = "1.1.2"
+kyant-backdrop = "2.0.0-alpha03"
+kyant-shapes = "1.2.0"
 nextlib = "1.10.0-0.12.1"
 okhttp = "5.3.2"
 reorderable = "3.1.0"
+profileinstaller = "1.4.1"
 room = "2.8.4"
 smbj = "0.14.0"
 universalChardet = "2.5.0"
@@ -77,11 +81,14 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidxEspresso" }
 androidx-test-ext = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxTestExt" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+colorpicker-compose = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker-compose" }
 github-albfernandez-juniversalchardet = { module = "com.github.albfernandez:juniversalchardet", version.ref = "universalChardet" }
 github-anilbeesetti-nextlib-media3ext = { module = "io.github.anilbeesetti:nextlib-media3ext", version.ref = "nextlib" }
 github-anilbeesetti-nextlib-mediainfo = { module = "io.github.anilbeesetti:nextlib-mediainfo", version.ref = "nextlib" }
 github-peerless2012-ass-media = { module = "io.github.peerless2012:ass-media", version.ref = "libassAndroid" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "androidMaterial" }
+kyant-backdrop = { module = "io.github.kyant0:backdrop-android", version.ref = "kyant-backdrop" }
+kyant-shapes = { module = "io.github.kyant0:shapes", version.ref = "kyant-shapes" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
@@ -91,6 +98,7 @@ kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 smbj = { module = "com.hierynomus:smbj", version.ref = "smbj" }
 

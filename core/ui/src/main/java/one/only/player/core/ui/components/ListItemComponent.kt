@@ -39,6 +39,22 @@ fun NextSegmentedListItem(
     interactionSource: MutableInteractionSource? = null,
 ) {
     val overrideShape = MaterialTheme.shapes.large
+    val currentShapes = remember(isFirstItem, isLastItem, shapes) {
+        val defaultBaseShape = shapes.shape
+        if (defaultBaseShape is CornerBasedShape) {
+            shapes.copy(
+                shape = defaultBaseShape.copy(
+                    topStart = overrideShape.topStart.takeIf { isFirstItem } ?: defaultBaseShape.topStart,
+                    topEnd = overrideShape.topEnd.takeIf { isFirstItem } ?: defaultBaseShape.topEnd,
+                    bottomStart = overrideShape.bottomStart.takeIf { isLastItem } ?: defaultBaseShape.bottomStart,
+                    bottomEnd = overrideShape.bottomEnd.takeIf { isLastItem } ?: defaultBaseShape.bottomEnd,
+                ),
+            )
+        } else {
+            shapes
+        }
+    }
+
     SegmentedListItem(
         modifier = modifier,
         selected = isSelected,
@@ -46,21 +62,7 @@ fun NextSegmentedListItem(
         onLongClick = onLongClick,
         enabled = isEnabled,
         verticalAlignment = Alignment.CenterVertically,
-        shapes = remember(isFirstItem, isLastItem, shapes) {
-            val defaultBaseShape = shapes.shape
-            if (defaultBaseShape is CornerBasedShape) {
-                shapes.copy(
-                    shape = defaultBaseShape.copy(
-                        topStart = overrideShape.topStart.takeIf { isFirstItem } ?: defaultBaseShape.topStart,
-                        topEnd = overrideShape.topEnd.takeIf { isFirstItem } ?: defaultBaseShape.topEnd,
-                        bottomStart = overrideShape.bottomStart.takeIf { isLastItem } ?: defaultBaseShape.bottomStart,
-                        bottomEnd = overrideShape.bottomEnd.takeIf { isLastItem } ?: defaultBaseShape.bottomEnd,
-                    ),
-                )
-            } else {
-                shapes
-            }
-        },
+        shapes = currentShapes,
         colors = colors,
         contentPadding = contentPadding,
         leadingContent = leadingContent,

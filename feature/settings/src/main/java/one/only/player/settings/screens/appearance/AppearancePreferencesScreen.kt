@@ -43,6 +43,7 @@ import one.only.player.settings.utils.LocalesHelper
 @Composable
 fun AppearancePreferencesScreen(
     onNavigateUp: () -> Unit,
+    onLiquidGlassClick: () -> Unit,
     viewModel: AppearancePreferencesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -51,6 +52,7 @@ fun AppearancePreferencesScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         onNavigateUp = onNavigateUp,
+        onLiquidGlassClick = onLiquidGlassClick,
     )
 }
 
@@ -60,6 +62,7 @@ private fun AppearancePreferencesContent(
     uiState: AppearancePreferencesUiState,
     onEvent: (AppearancePreferencesEvent) -> Unit,
     onNavigateUp: () -> Unit = {},
+    onLiquidGlassClick: () -> Unit = {},
 ) {
     val appLanguages = remember { LocalesHelper.appSupportedLocales }
     Scaffold(
@@ -124,8 +127,14 @@ private fun AppearancePreferencesContent(
                     icon = NextIcons.Title,
                     isChecked = uiState.preferences.shouldNavigateHomeOnTitleLongPress,
                     onClick = { onEvent(AppearancePreferencesEvent.ToggleNavigateHomeOnTitleLongPress) },
-                    isLastItem = true,
                     modifier = Modifier.testTag("switch_settings_appearance_title_long_press_home"),
+                )
+                ClickablePreferenceItem(
+                    title = "Liquid Glass",
+                    description = if (uiState.preferences.liquidGlassPreferences.isEnabled) "Enabled" else "Disabled",
+                    icon = NextIcons.Style,
+                    onClick = onLiquidGlassClick,
+                    isLastItem = true,
                 )
             }
         }

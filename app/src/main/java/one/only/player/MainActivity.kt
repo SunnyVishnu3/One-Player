@@ -172,6 +172,7 @@ class MainActivity : AppCompatActivity() {
             OnlyPlayerTheme(
                 shouldUseDarkTheme = shouldUseDarkTheme,
                 shouldUseDynamicColor = shouldUseDynamicTheming(uiState = uiState),
+                liquidGlassPreferences = preferences?.liquidGlassPreferences ?: one.only.player.core.model.LiquidGlassPreferences(),
             ) {
                 StartupUpdateDialog(viewModel = viewModel)
 
