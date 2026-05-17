@@ -58,6 +58,7 @@ class DecoderPreferencesViewModel @Inject constructor(
             is DecoderPreferencesUiEvent.UpdateVideoGamma -> updateVideoGamma(event.value)
             DecoderPreferencesUiEvent.ToggleVideoSharpeningFilter -> toggleVideoSharpeningFilter()
             is DecoderPreferencesUiEvent.UpdateVideoSharpening -> updateVideoSharpening(event.value)
+            DecoderPreferencesUiEvent.ToggleUltraHdr -> toggleUltraHdr()
         }
     }
 
@@ -116,6 +117,14 @@ class DecoderPreferencesViewModel @Inject constructor(
     private fun toggleVideoSharpeningFilter() {
         updateVideoFilter("sharpening enabled toggled") { preferences ->
             preferences.copy(isVideoSharpeningFilterEnabled = !preferences.isVideoSharpeningFilterEnabled)
+        }
+    }
+
+    private fun toggleUltraHdr() {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(isUltraHdrEnabled = !it.isUltraHdrEnabled)
+            }
         }
     }
 
@@ -186,4 +195,5 @@ sealed interface DecoderPreferencesUiEvent {
     data class UpdateVideoGamma(val value: Float) : DecoderPreferencesUiEvent
     data object ToggleVideoSharpeningFilter : DecoderPreferencesUiEvent
     data class UpdateVideoSharpening(val value: Float) : DecoderPreferencesUiEvent
+    data object ToggleUltraHdr : DecoderPreferencesUiEvent
 }

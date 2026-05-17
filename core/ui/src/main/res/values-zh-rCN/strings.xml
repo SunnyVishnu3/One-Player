@@ -169,6 +169,8 @@
     <string name="play_url">输入要播放的视频网址</string>
     <string name="video_software_decoders">软件视频解码器</string>
     <string name="decoder_priority">解码器</string>
+    <string name="ultra_hdr">Ultra HDR</string>
+    <string name="ultra_hdr_description">在兼容显示器上增强 HDR 视频高亮</string>
     <string name="auto_hw_decoder">自动检测（硬件解码优先）</string>
     <string name="auto_hw_plus_decoder">自动检测（硬件解码+优先）</string>
     <string name="hw_decoder">硬件解码</string>

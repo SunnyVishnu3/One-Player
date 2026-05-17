@@ -99,6 +99,14 @@ private fun DecoderPreferencesContent(
                     icon = NextIcons.Priority,
                     onClick = { onEvent(DecoderPreferencesUiEvent.ShowDialog(DecoderPreferenceDialog.DecoderPriorityDialog)) },
                     isFirstItem = true,
+                )
+                PreferenceSwitch(
+                    modifier = Modifier.testTag("switch_settings_ultra_hdr"),
+                    title = stringResource(id = R.string.ultra_hdr),
+                    description = stringResource(id = R.string.ultra_hdr_description),
+                    icon = NextIcons.Brightness,
+                    isChecked = preferences.isUltraHdrEnabled,
+                    onClick = { onEvent(DecoderPreferencesUiEvent.ToggleUltraHdr) },
                     isLastItem = true,
                 )
             }

@@ -1310,7 +1310,7 @@ class PlayerService : MediaSessionService() {
     }
 
     private fun PlayerPreferences.toVideoFilterPreferences(): VideoFilterPreferences {
-        if (!shouldApplyVideoFilters) return VideoFilterPreferences.default()
+        if (!shouldApplyVideoFilters) return VideoFilterPreferences.default().copy(isUltraHdrEnabled = isUltraHdrEnabled)
 
         val filters = VideoFilterPreferences(
             shouldApply = true,
@@ -1350,6 +1350,7 @@ class PlayerService : MediaSessionService() {
             } else {
                 PlayerPreferences.DEFAULT_VIDEO_SHARPENING
             },
+            isUltraHdrEnabled = isUltraHdrEnabled,
         )
         return if (filters.shouldCreateEffect()) filters else VideoFilterPreferences.default()
     }
@@ -1368,6 +1369,7 @@ class PlayerService : MediaSessionService() {
         videoGamma = getFloat(CustomCommands.VIDEO_GAMMA_KEY, PlayerPreferences.DEFAULT_VIDEO_GAMMA),
         isVideoSharpeningFilterEnabled = getBoolean(CustomCommands.IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY, false),
         videoSharpening = getFloat(CustomCommands.VIDEO_SHARPENING_KEY, PlayerPreferences.DEFAULT_VIDEO_SHARPENING),
+        isUltraHdrEnabled = getBoolean(CustomCommands.IS_ULTRA_HDR_ENABLED_KEY, false),
     )
 
     private fun buildVideoEffects(
@@ -1380,6 +1382,7 @@ class PlayerService : MediaSessionService() {
             VideoFiltersEffect(
                 transition = transition,
                 transitionDurationMs = VIDEO_FILTER_TRANSITION_DURATION_MS,
+                isUltraHdrEnabled = transition.targetFilters.isUltraHdrEnabled,
             ),
         )
     }

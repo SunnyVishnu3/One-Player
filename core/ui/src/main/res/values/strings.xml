@@ -182,6 +182,8 @@
     <string name="video_software_decoders">Software video decoders</string>
     <string name="video_software_decoders_desc">Use application software video decoders (experimental)</string>
     <string name="decoder_priority">Decoder</string>
+    <string name="ultra_hdr">Ultra HDR</string>
+    <string name="ultra_hdr_description">Enhance HDR video highlights on compatible displays</string>
     <string name="auto_hw_decoder">Auto detect (prefer hardware decoding)</string>
     <string name="auto_hw_plus_decoder">Auto detect (prefer hardware decoding+)</string>
     <string name="hw_decoder">Hardware decoding</string>

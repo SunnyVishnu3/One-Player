@@ -16,6 +16,7 @@ data class VideoFilterPreferences(
     val gamma: Float,
     val isSharpeningEnabled: Boolean,
     val sharpening: Float,
+    val isUltraHdrEnabled: Boolean,
 ) {
     fun interpolateTo(
         target: VideoFilterPreferences,
@@ -37,10 +38,11 @@ data class VideoFilterPreferences(
             gamma = gamma.interpolate(target.gamma, fraction),
             isSharpeningEnabled = isSharpeningEnabled || target.isSharpeningEnabled,
             sharpening = sharpening.interpolate(target.sharpening, fraction),
+            isUltraHdrEnabled = target.isUltraHdrEnabled,
         )
     }
 
-    fun shouldCreateEffect(): Boolean = shouldApply &&
+    fun shouldCreateEffect(): Boolean = (shouldApply &&
         (
             isBrightnessEnabled &&
                 brightness != PlayerPreferences.DEFAULT_VIDEO_BRIGHTNESS ||
@@ -54,7 +56,7 @@ data class VideoFilterPreferences(
                 gamma != PlayerPreferences.DEFAULT_VIDEO_GAMMA ||
                 isSharpeningEnabled &&
                 sharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING
-            )
+            )) || isUltraHdrEnabled
 
     companion object {
         fun default(): VideoFilterPreferences = VideoFilterPreferences(
@@ -71,6 +73,7 @@ data class VideoFilterPreferences(
             gamma = PlayerPreferences.DEFAULT_VIDEO_GAMMA,
             isSharpeningEnabled = false,
             sharpening = PlayerPreferences.DEFAULT_VIDEO_SHARPENING,
+            isUltraHdrEnabled = false,
         )
     }
 }

@@ -86,6 +86,7 @@ data class PlayerPreferences(
 
     // 解码偏好
     val decoderPriority: DecoderPriority = DecoderPriority.AUTOMATIC,
+    val isUltraHdrEnabled: Boolean = false,
 ) {
 
     companion object {

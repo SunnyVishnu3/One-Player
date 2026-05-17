@@ -55,6 +55,7 @@ enum class CustomCommands(val customAction: String) {
         const val VIDEO_GAMMA_KEY = "video_gamma"
         const val IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY = "is_video_sharpening_filter_enabled"
         const val VIDEO_SHARPENING_KEY = "video_sharpening"
+        const val IS_ULTRA_HDR_ENABLED_KEY = "is_ultra_hdr_enabled"
     }
 }
 
@@ -155,6 +156,7 @@ fun MediaController.previewVideoFilters(preferences: PlayerPreferences) {
         putFloat(CustomCommands.VIDEO_GAMMA_KEY, preferences.videoGamma)
         putBoolean(CustomCommands.IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY, preferences.isVideoSharpeningFilterEnabled)
         putFloat(CustomCommands.VIDEO_SHARPENING_KEY, preferences.videoSharpening)
+        putBoolean(CustomCommands.IS_ULTRA_HDR_ENABLED_KEY, preferences.isUltraHdrEnabled)
     }
     sendCustomCommand(CustomCommands.PREVIEW_VIDEO_FILTERS.sessionCommand, args)
 }

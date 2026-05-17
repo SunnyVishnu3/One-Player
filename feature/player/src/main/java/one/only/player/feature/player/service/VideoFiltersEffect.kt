@@ -17,6 +17,7 @@ import androidx.media3.effect.GlShaderProgram
 internal class VideoFiltersEffect(
     private val transition: VideoFilterTransition,
     private val transitionDurationMs: Long,
+    private val isUltraHdrEnabled: Boolean,
 ) : GlEffect {
 
     override fun toGlShaderProgram(
@@ -26,6 +27,7 @@ internal class VideoFiltersEffect(
         useHdr = useHdr,
         transition = transition,
         transitionDurationMs = transitionDurationMs,
+        isUltraHdrEnabled = isUltraHdrEnabled,
     )
 
     override fun isNoOp(
@@ -34,9 +36,10 @@ internal class VideoFiltersEffect(
     ): Boolean = false
 
     private class VideoFiltersShaderProgram(
-        useHdr: Boolean,
+        private val useHdr: Boolean,
         private val transition: VideoFilterTransition,
         private val transitionDurationMs: Long,
+        private val isUltraHdrEnabled: Boolean,
     ) : BaseGlShaderProgram(useHdr, 1) {
 
         private val glProgram = createGlProgram()
@@ -74,6 +77,8 @@ internal class VideoFiltersEffect(
                 glProgram.use()
                 setFilterUniforms()
                 glProgram.setSamplerTexIdUniform("uTexSampler", inputTexId, 0)
+                glProgram.setFloatUniform("uUseHdr", if (useHdr) 1f else 0f)
+                glProgram.setFloatUniform("uUltraHdrEnabled", if (isUltraHdrEnabled) 1f else 0f)
                 glProgram.bindAttributesAndUniforms()
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTEX_COUNT)
                 GlUtil.checkGlError()
@@ -143,6 +148,8 @@ internal class VideoFiltersEffect(
             uniform float uHue;
             uniform float uGamma;
             uniform float uSharpness;
+            uniform float uUseHdr;
+            uniform float uUltraHdrEnabled;
             varying vec2 vTexSamplingCoord;
 
             vec3 rotateHue(vec3 color, float hue) {
@@ -191,6 +198,14 @@ internal class VideoFiltersEffect(
             void main() {
               vec4 center = texture2D(uTexSampler, vTexSamplingCoord);
               vec3 sourceColor = center.rgb;
+
+              if (uUseHdr > 0.5 && uUltraHdrEnabled > 0.5) {
+                // Boost highlights for HDR content similar to Ultra HDR gain maps.
+                // We use BT.2100 luma coefficients to find bright areas.
+                float luma = dot(sourceColor, vec3(0.2627, 0.6780, 0.0593));
+                float boost = 1.0 + smoothstep(0.4, 1.0, luma) * 0.25;
+                sourceColor *= boost;
+              }
 
               if (uSharpness > 0.0) {
                 vec3 north = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, -uTexelSize.y)).rgb;

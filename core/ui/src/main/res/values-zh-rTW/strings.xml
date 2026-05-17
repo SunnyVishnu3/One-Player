@@ -233,6 +233,8 @@
     <string name="dynamic_theme_description">為應用程式主題套用系統桌布色彩</string>
     <string name="system_default">系統預設</string>
     <string name="decoder_priority">解碼器</string>
+    <string name="ultra_hdr">Ultra HDR</string>
+    <string name="ultra_hdr_description">在相容顯示器上增強 HDR 影片高亮</string>
     <string name="done">完成</string>
     <string name="codec">編解碼器</string>
     <string name="properties">資訊</string>
