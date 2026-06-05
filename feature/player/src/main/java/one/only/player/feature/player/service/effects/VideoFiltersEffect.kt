@@ -134,7 +134,7 @@ internal class VideoFiltersEffect(
     }
 
     private companion object {
-        private const val POSITION_COMPONENT_COUNT = 4
+        private const val POSITION_COMPONENT_COUNT = 2
         private const val VERTEX_COUNT = 4
         private const val SHARPNESS_SCALE = 1.0f
 
