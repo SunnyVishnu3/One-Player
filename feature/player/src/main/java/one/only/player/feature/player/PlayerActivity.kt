@@ -273,7 +273,9 @@ class PlayerActivity : AppCompatActivity() {
                     ThemeConfig.OFF -> false
                     ThemeConfig.ON -> true
                 },
+                useHighContrastDarkTheme = uiState.applicationPreferences.useHighContrastDarkTheme,
                 shouldUseDynamicColor = uiState.applicationPreferences.shouldUseDynamicColors,
+                appTheme = uiState.applicationPreferences.appTheme,
             ) {
                 MediaPlayerScreen(
                     modifier = Modifier.semantics {
@@ -459,7 +461,8 @@ class PlayerActivity : AppCompatActivity() {
         val uri = intent.data ?: return
 
         val isReturningFromBackground = !isIntentNew && mediaController?.currentMediaItem != null
-        val isNewUriTheCurrentMediaItem = mediaController?.currentMediaItem?.localConfiguration?.uri.toString() == uri.toString()
+        val currentMediaItemUri = mediaController?.currentMediaItem?.let { it.localConfiguration?.uri ?: it.mediaId.let { id -> if (id.startsWith("/")) Uri.fromFile(java.io.File(id)) else Uri.parse(id) } }
+        val isNewUriTheCurrentMediaItem = currentMediaItemUri?.toString() == uri.toString()
 
         if (isReturningFromBackground || isNewUriTheCurrentMediaItem) {
             Logger.info(
@@ -572,7 +575,8 @@ class PlayerActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             mediaController?.run {
                 val currentItem = currentMediaItem ?: return@run
-                if (currentItem.localConfiguration?.uri.toString() != playbackTarget.playbackUriString) return@run
+                val currentItemUri = currentItem.localConfiguration?.uri ?: currentItem.mediaId.let { id -> if (id.startsWith("/")) Uri.fromFile(java.io.File(id)) else Uri.parse(id) }
+                if (currentItemUri.toString() != playbackTarget.playbackUriString) return@run
                 if (mediaItemCount != 1) return@run
 
                 if (currentLocalParentPath != null) {
@@ -705,7 +709,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun playbackStateListener() = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             super.onMediaItemTransition(mediaItem, reason)
-            intent.data = mediaItem?.localConfiguration?.uri
+            intent.data = mediaItem?.localConfiguration?.uri ?: mediaItem?.mediaId?.let { id -> if (id.startsWith("/")) Uri.fromFile(java.io.File(id)) else Uri.parse(id) }
             updateKeepScreenOnFlag()
         }
 

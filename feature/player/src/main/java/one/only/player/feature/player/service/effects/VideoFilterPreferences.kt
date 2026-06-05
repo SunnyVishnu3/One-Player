@@ -16,6 +16,10 @@ data class VideoFilterPreferences(
     val gamma: Float,
     val isSharpeningEnabled: Boolean,
     val sharpening: Float,
+    val isLineDarkenEnabled: Boolean,
+    val lineDarken: Float,
+    val isLineThinEnabled: Boolean,
+    val lineThin: Float,
 ) {
     fun interpolateTo(
         target: VideoFilterPreferences,
@@ -37,6 +41,10 @@ data class VideoFilterPreferences(
             gamma = gamma.interpolate(target.gamma, fraction),
             isSharpeningEnabled = isSharpeningEnabled || target.isSharpeningEnabled,
             sharpening = sharpening.interpolate(target.sharpening, fraction),
+            isLineDarkenEnabled = isLineDarkenEnabled || target.isLineDarkenEnabled,
+            lineDarken = lineDarken.interpolate(target.lineDarken, fraction),
+            isLineThinEnabled = isLineThinEnabled || target.isLineThinEnabled,
+            lineThin = lineThin.interpolate(target.lineThin, fraction),
         )
     }
 
@@ -53,7 +61,11 @@ data class VideoFilterPreferences(
                 isGammaEnabled &&
                 gamma != PlayerPreferences.DEFAULT_VIDEO_GAMMA ||
                 isSharpeningEnabled &&
-                sharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING
+                sharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING ||
+                isLineDarkenEnabled &&
+                lineDarken != PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN ||
+                isLineThinEnabled &&
+                lineThin != PlayerPreferences.DEFAULT_VIDEO_LINE_THIN
             )
 
     companion object {
@@ -71,6 +83,10 @@ data class VideoFilterPreferences(
             gamma = PlayerPreferences.DEFAULT_VIDEO_GAMMA,
             isSharpeningEnabled = false,
             sharpening = PlayerPreferences.DEFAULT_VIDEO_SHARPENING,
+            isLineDarkenEnabled = false,
+            lineDarken = PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN,
+            isLineThinEnabled = false,
+            lineThin = PlayerPreferences.DEFAULT_VIDEO_LINE_THIN,
         )
     }
 }

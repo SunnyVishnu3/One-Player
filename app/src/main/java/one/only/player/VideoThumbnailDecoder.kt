@@ -139,6 +139,15 @@ class VideoThumbnailDecoder(
             )
         }
 
+        tryLoadMediaMetadataRetriever()?.let { mmrBitmap ->
+            logThumbnail { "mmr fallback strategy=${strategy.logName} key=$key" }
+            val bitmap = writeToDiskCache(mmrBitmap)
+            return DecodeResult(
+                image = bitmap.toDrawable(options.context.resources).asImage(),
+                isSampled = true,
+            )
+        }
+
         tryLoadSystemThumbnail()?.let { systemBitmap ->
             logThumbnail { "systemThumbnail fallback strategy=${strategy.logName} key=$key" }
             val bitmap = writeToDiskCache(systemBitmap)
@@ -220,6 +229,37 @@ class VideoThumbnailDecoder(
             null
         } finally {
             mediaInfo.release()
+        }
+    }
+
+    private fun tryLoadMediaMetadataRetriever(): Bitmap? {
+        val retriever = android.media.MediaMetadataRetriever()
+        return try {
+            when (val metadata = source.metadata) {
+                is ContentMetadata -> retriever.setDataSource(options.context, metadata.uri.toAndroidUri())
+                else -> {
+                    if (source.fileSystem !== FileSystem.SYSTEM) return null
+                    retriever.setDataSource(source.file().toFile().path)
+                }
+            }
+            val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val durationMs = durationStr?.toLongOrNull() ?: 0L
+            val timeUs = when (strategy) {
+                is ThumbnailStrategy.FirstFrame -> 0L
+                is ThumbnailStrategy.FrameAtPercentage -> (durationMs * strategy.percentage).toLong() * 1000L
+                is ThumbnailStrategy.Hybrid -> {
+                    // Just fallback to FrameAtPercentage for MMR hybrid
+                    (durationMs * strategy.percentage).toLong() * 1000L
+                }
+            }
+            retriever.getFrameAtTime(timeUs, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)?.scaleToFit()
+        } catch (e: Exception) {
+            logThumbnail { "mmr frame fail err=${e.message}" }
+            null
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {}
         }
     }
 

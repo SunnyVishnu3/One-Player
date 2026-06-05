@@ -45,7 +45,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import one.only.player.core.model.AppTheme
 import one.only.player.core.common.AppThemeMode
 import one.only.player.core.common.extensions.applyPrivacyProtection
 import one.only.player.core.common.extensions.resolvePrivacyPreviewScrim
@@ -161,8 +163,9 @@ class MainActivity : AppCompatActivity() {
                 uiState = uiState,
                 bootstrapShouldUseDynamicColors = bootstrapShouldUseDynamicColors,
             )
-
             val preferences = (uiState as? MainActivityUiState.Success)?.preferences
+            val appTheme = preferences?.appTheme ?: AppTheme.Default
+            val useHighContrastDarkTheme = preferences?.useHighContrastDarkTheme == true
             val shouldPreventScreenshots = preferences?.shouldPreventScreenshots == true
             val shouldHideInRecents = preferences?.shouldHideInRecents == true
             val shouldShowStartupSplash = uiState == MainActivityUiState.Loading || !isStartupSplashReady
@@ -189,7 +192,9 @@ class MainActivity : AppCompatActivity() {
 
             OnlyPlayerTheme(
                 shouldUseDarkTheme = shouldUseDarkTheme,
+                useHighContrastDarkTheme = useHighContrastDarkTheme,
                 shouldUseDynamicColor = shouldUseDynamicColor,
+                appTheme = appTheme,
             ) {
                 if (!shouldShowStartupSplash) {
                     StartupUpdateDialog(viewModel = viewModel)

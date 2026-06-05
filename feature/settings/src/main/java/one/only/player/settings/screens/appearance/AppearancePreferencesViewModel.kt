@@ -16,6 +16,8 @@ import one.only.player.core.common.AppThemeMode
 import one.only.player.core.common.AppThemeModeManager
 import one.only.player.core.data.repository.PreferencesRepository
 import one.only.player.core.model.ApplicationPreferences
+import one.only.player.core.model.AppTheme
+import one.only.player.core.model.SeekbarStyle
 import one.only.player.core.model.ThemeConfig
 
 @HiltViewModel
@@ -43,8 +45,11 @@ class AppearancePreferencesViewModel @Inject constructor(
         when (event) {
             is AppearancePreferencesEvent.ShowDialog -> showDialog(event.value)
             is AppearancePreferencesEvent.UpdateThemeConfig -> updateThemeConfig(event.themeConfig)
+            is AppearancePreferencesEvent.UpdateAppTheme -> updateAppTheme(event.appTheme)
+            is AppearancePreferencesEvent.UpdateSeekbarStyle -> updateSeekbarStyle(event.seekbarStyle)
             is AppearancePreferencesEvent.UpdateAppLanguage -> updateAppLanguage(event.languageTag)
             AppearancePreferencesEvent.ToggleUseDynamicColors -> toggleUseDynamicColors()
+            AppearancePreferencesEvent.ToggleUseHighContrastDarkTheme -> toggleUseHighContrastDarkTheme()
             AppearancePreferencesEvent.ToggleNavigateHomeOnTitleLongPress -> toggleNavigateHomeOnTitleLongPress()
         }
     }
@@ -67,6 +72,22 @@ class AppearancePreferencesViewModel @Inject constructor(
         }
     }
 
+    private fun updateAppTheme(appTheme: AppTheme) {
+        viewModelScope.launch {
+            preferencesRepository.updateApplicationPreferences {
+                it.copy(appTheme = appTheme)
+            }
+        }
+    }
+
+    private fun updateSeekbarStyle(seekbarStyle: SeekbarStyle) {
+        viewModelScope.launch {
+            preferencesRepository.updateApplicationPreferences {
+                it.copy(seekbarStyle = seekbarStyle)
+            }
+        }
+    }
+
     private fun updateAppLanguage(languageTag: String) {
         viewModelScope.launch {
             preferencesRepository.updateApplicationPreferences {
@@ -80,6 +101,14 @@ class AppearancePreferencesViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.updateApplicationPreferences {
                 it.copy(shouldUseDynamicColors = !it.shouldUseDynamicColors)
+            }
+        }
+    }
+
+    private fun toggleUseHighContrastDarkTheme() {
+        viewModelScope.launch {
+            preferencesRepository.updateApplicationPreferences {
+                it.copy(useHighContrastDarkTheme = !it.useHighContrastDarkTheme)
             }
         }
     }
@@ -110,12 +139,17 @@ private fun ThemeConfig.toAppThemeMode(): AppThemeMode = when (this) {
 sealed interface AppearancePreferencesEvent {
     data class ShowDialog(val value: AppearancePreferenceDialog?) : AppearancePreferencesEvent
     data class UpdateThemeConfig(val themeConfig: ThemeConfig) : AppearancePreferencesEvent
+    data class UpdateAppTheme(val appTheme: AppTheme) : AppearancePreferencesEvent
+    data class UpdateSeekbarStyle(val seekbarStyle: SeekbarStyle) : AppearancePreferencesEvent
     data class UpdateAppLanguage(val languageTag: String) : AppearancePreferencesEvent
     data object ToggleUseDynamicColors : AppearancePreferencesEvent
+    data object ToggleUseHighContrastDarkTheme : AppearancePreferencesEvent
     data object ToggleNavigateHomeOnTitleLongPress : AppearancePreferencesEvent
 }
 
 sealed interface AppearancePreferenceDialog {
     data object Theme : AppearancePreferenceDialog
+    data object AppThemePalette : AppearancePreferenceDialog
     data object AppLanguage : AppearancePreferenceDialog
+    data object SeekbarStyle : AppearancePreferenceDialog
 }

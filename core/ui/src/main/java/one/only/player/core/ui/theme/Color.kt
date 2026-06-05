@@ -219,3 +219,13 @@ val surfaceContainerHighDarkHighContrast = Color(0xFF363D3C)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF414847)
 
 val seed = Color(0xFF4EA3FF)
+
+val backgroundPureBlack = Color(0xFF000000)
+val surfacePureBlack = Color(0xFF000000)
+val surfaceDimPureBlack = Color(0xFF000000)
+val surfaceBrightPureBlack = Color(0xFF000000)
+val surfaceContainerLowestPureBlack = Color(0xFF000000)
+val surfaceContainerLowPureBlack = Color(0xFF000000)
+val surfaceContainerPureBlack = Color(0xFF000000)
+val surfaceContainerHighPureBlack = Color(0xFF000000)
+val surfaceContainerHighestPureBlack = Color(0xFF000000)

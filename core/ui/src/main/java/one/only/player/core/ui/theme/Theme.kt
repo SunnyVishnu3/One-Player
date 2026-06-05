@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import one.only.player.core.model.AppTheme
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -242,20 +243,34 @@ private val highContrastDarkColorScheme = darkColorScheme(
 @Composable
 fun OnlyPlayerTheme(
     shouldUseDarkTheme: Boolean = isSystemInDarkTheme(),
+    useHighContrastDarkTheme: Boolean = false,
     shouldUseDynamicColor: Boolean = true,
+    appTheme: AppTheme = AppTheme.Default,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         shouldUseDynamicColor && supportsDynamicTheming() -> {
             val context = LocalContext.current
             when {
+                shouldUseDarkTheme && useHighContrastDarkTheme -> dynamicDarkColorScheme(context).copy(
+                    background = backgroundPureBlack,
+                    surface = surfacePureBlack,
+                    surfaceDim = surfaceDimPureBlack,
+                    surfaceBright = surfaceBrightPureBlack,
+                    surfaceContainerLowest = surfaceContainerLowestPureBlack,
+                    surfaceContainerLow = surfaceContainerLowPureBlack,
+                    surfaceContainer = surfaceContainerPureBlack,
+                    surfaceContainerHigh = surfaceContainerHighPureBlack,
+                    surfaceContainerHighest = surfaceContainerHighestPureBlack,
+                )
                 shouldUseDarkTheme -> dynamicDarkColorScheme(context)
                 else -> dynamicLightColorScheme(context)
             }
         }
 
-        shouldUseDarkTheme -> darkScheme
-        else -> lightScheme
+        shouldUseDarkTheme && useHighContrastDarkTheme -> appTheme.getThemeColors().getAmoledColorScheme()
+        shouldUseDarkTheme -> appTheme.getThemeColors().getDarkColorScheme()
+        else -> appTheme.getThemeColors().getLightColorScheme()
     }
 
     MaterialTheme(

@@ -26,6 +26,8 @@ enum class CustomCommands(val customAction: String) {
     GET_LOUDNESS_GAIN(customAction = "GET_LOUDNESS_GAIN"),
     PREVIEW_VIDEO_FILTERS(customAction = "PREVIEW_VIDEO_FILTERS"),
     GET_VIDEO_FORMAT(customAction = "GET_VIDEO_FORMAT"),
+    SET_AMBIENT_MODE_ENABLED(customAction = "SET_AMBIENT_MODE_ENABLED"),
+    UPDATE_AMBIENT_PARAMETERS(customAction = "UPDATE_AMBIENT_PARAMETERS"),
     ;
 
     val sessionCommand = SessionCommand(customAction, Bundle.EMPTY)
@@ -57,8 +59,13 @@ enum class CustomCommands(val customAction: String) {
         const val VIDEO_GAMMA_KEY = "video_gamma"
         const val IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY = "is_video_sharpening_filter_enabled"
         const val VIDEO_SHARPENING_KEY = "video_sharpening"
+        const val IS_VIDEO_LINE_DARKEN_FILTER_ENABLED_KEY = "is_video_line_darken_filter_enabled"
+        const val VIDEO_LINE_DARKEN_KEY = "video_line_darken"
+        const val IS_VIDEO_LINE_THIN_FILTER_ENABLED_KEY = "is_video_line_thin_filter_enabled"
+        const val VIDEO_LINE_THIN_KEY = "video_line_thin"
         const val VIDEO_DECODER_PRIORITY_KEY = "video_decoder_priority"
         const val VIDEO_DECODER_NAME_KEY = "video_decoder_name"
+        const val VIDEO_FPS_KEY = "video_fps"
         const val VIDEO_WIDTH_KEY = "video_width"
         const val VIDEO_HEIGHT_KEY = "video_height"
         const val VIDEO_COLOR_TRANSFER_KEY = "video_color_transfer"
@@ -67,6 +74,13 @@ enum class CustomCommands(val customAction: String) {
         const val IS_VIDEO_HDR_KEY = "is_video_hdr"
         const val IS_VIDEO_EFFECTS_AVAILABLE_KEY = "is_video_effects_available"
         const val IS_VIDEO_EFFECTS_ACTIVE_KEY = "is_video_effects_active"
+        const val IS_AMBIENT_MODE_ENABLED_KEY = "is_ambient_mode_enabled"
+        const val AMBIENT_SCALE_X_KEY = "ambient_scale_x"
+        const val AMBIENT_SCALE_Y_KEY = "ambient_scale_y"
+        const val AMBIENT_OFFSET_X_KEY = "ambient_offset_x"
+        const val AMBIENT_OFFSET_Y_KEY = "ambient_offset_y"
+        const val CONTAINER_WIDTH_KEY = "container_width"
+        const val CONTAINER_HEIGHT_KEY = "container_height"
     }
 }
 
@@ -167,6 +181,10 @@ fun MediaController.previewVideoFilters(preferences: PlayerPreferences) {
         putFloat(CustomCommands.VIDEO_GAMMA_KEY, preferences.videoGamma)
         putBoolean(CustomCommands.IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY, preferences.isVideoSharpeningFilterEnabled)
         putFloat(CustomCommands.VIDEO_SHARPENING_KEY, preferences.videoSharpening)
+        putBoolean(CustomCommands.IS_VIDEO_LINE_DARKEN_FILTER_ENABLED_KEY, preferences.isVideoLineDarkenFilterEnabled)
+        putFloat(CustomCommands.VIDEO_LINE_DARKEN_KEY, preferences.videoLineDarken)
+        putBoolean(CustomCommands.IS_VIDEO_LINE_THIN_FILTER_ENABLED_KEY, preferences.isVideoLineThinFilterEnabled)
+        putFloat(CustomCommands.VIDEO_LINE_THIN_KEY, preferences.videoLineThin)
     }
     sendCustomCommand(CustomCommands.PREVIEW_VIDEO_FILTERS.sessionCommand, args)
 }
@@ -184,4 +202,30 @@ suspend fun MediaController.getLoudnessGain(): Int {
 suspend fun MediaController.isLoudnessGainSupported(): Boolean {
     val result = sendCustomCommand(CustomCommands.IS_LOUDNESS_GAIN_SUPPORTED.sessionCommand, Bundle.EMPTY)
     return result.await().extras.getBoolean(CustomCommands.IS_LOUDNESS_GAIN_SUPPORTED_KEY, false)
+}
+
+fun MediaController.setAmbientModeEnabled(isEnabled: Boolean) {
+    val args = Bundle().apply {
+        putBoolean(CustomCommands.IS_AMBIENT_MODE_ENABLED_KEY, isEnabled)
+    }
+    sendCustomCommand(CustomCommands.SET_AMBIENT_MODE_ENABLED.sessionCommand, args)
+}
+
+fun MediaController.updateAmbientParameters(
+    scaleX: Float,
+    scaleY: Float,
+    offsetX: Float,
+    offsetY: Float,
+    containerWidth: Int,
+    containerHeight: Int,
+) {
+    val args = Bundle().apply {
+        putFloat(CustomCommands.AMBIENT_SCALE_X_KEY, scaleX)
+        putFloat(CustomCommands.AMBIENT_SCALE_Y_KEY, scaleY)
+        putFloat(CustomCommands.AMBIENT_OFFSET_X_KEY, offsetX)
+        putFloat(CustomCommands.AMBIENT_OFFSET_Y_KEY, offsetY)
+        putInt(CustomCommands.CONTAINER_WIDTH_KEY, containerWidth)
+        putInt(CustomCommands.CONTAINER_HEIGHT_KEY, containerHeight)
+    }
+    sendCustomCommand(CustomCommands.UPDATE_AMBIENT_PARAMETERS.sessionCommand, args)
 }

@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import coil3.ImageLoader
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.anilbeesetti.nextlib.mediainfo.AudioStream
+import io.github.anilbeesetti.nextlib.mediainfo.MediaInfo
 import io.github.anilbeesetti.nextlib.mediainfo.MediaInfoBuilder
 import io.github.anilbeesetti.nextlib.mediainfo.SubtitleStream
 import io.github.anilbeesetti.nextlib.mediainfo.VideoStream

@@ -1,5 +1,6 @@
 package one.only.player.feature.player.ui.controls
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import one.only.player.feature.player.LocalControlsVisibilityState
 import one.only.player.feature.player.extensions.formatted
 import one.only.player.feature.player.extensions.noRippleClickable
 import one.only.player.feature.player.state.MediaPresentationState
+import one.only.player.core.model.SeekbarStyle
 import one.only.player.feature.player.state.durationFormatted
 
 @Composable
@@ -64,6 +66,9 @@ fun ControlsBottomModernView(
     onPlaybackSpeedClick: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    videoUri: Uri? = null,
+    useSeekPreviewBubble: Boolean = false,
+    seekbarStyle: SeekbarStyle = SeekbarStyle.Wavy,
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
@@ -75,7 +80,7 @@ fun ControlsBottomModernView(
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        ModernSeekbar(
+        VideoSeekbar(
             modifier = Modifier.padding(
                 playerProgressHorizontalPadding(
                     containerHorizontalPadding = 8.dp,
@@ -84,11 +89,16 @@ fun ControlsBottomModernView(
             ),
             position = displayedPosition.toFloat(),
             duration = mediaPresentationState.duration.toFloat(),
-            onSeek = {
+            onValueChange = {
                 controlsVisibilityState?.showControls()
                 onSeek(it.toLong())
             },
-            onSeekFinished = { onSeekEnd() },
+            onValueChangeFinished = { 
+                onSeekEnd()
+            },
+            videoUri = videoUri,
+            useSeekPreview = useSeekPreviewBubble,
+            seekbarStyle = seekbarStyle,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),

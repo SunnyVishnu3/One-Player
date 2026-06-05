@@ -94,6 +94,7 @@ class PlayerControlsLayout(
             PlayerControl.LOOP,
             PlayerControl.SHUFFLE,
             PlayerControl.SLEEP_TIMER,
+            PlayerControl.STATS,
         )
 
         val customizableControls: Set<PlayerControl> =

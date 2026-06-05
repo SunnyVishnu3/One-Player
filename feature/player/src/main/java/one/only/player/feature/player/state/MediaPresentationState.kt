@@ -1,5 +1,6 @@
 package one.only.player.feature.player.state
 
+import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +46,9 @@ class MediaPresentationState(
     var duration: Long by mutableLongStateOf(0L)
         private set
 
+    var currentVideoUri: Uri? by mutableStateOf(null)
+        private set
+
     var isPlaying: Boolean by mutableStateOf(false)
         private set
 
@@ -60,6 +64,7 @@ class MediaPresentationState(
     suspend fun observe() {
         updatePosition()
         updateDuration()
+        currentVideoUri = player.currentMediaItem?.localConfiguration?.uri ?: player.currentMediaItem?.mediaId?.let { if (it.startsWith("/")) Uri.fromFile(java.io.File(it)) else Uri.parse(it) }
         isPlaying = player.isPlaying
         isLoading = player.isLoading
         isBuffering = player.playbackState == Player.STATE_BUFFERING
@@ -86,6 +91,7 @@ class MediaPresentationState(
 
                     if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) {
                         this@MediaPresentationState.hasRenderedFirstFrame = false
+                        this@MediaPresentationState.currentVideoUri = player.currentMediaItem?.localConfiguration?.uri ?: player.currentMediaItem?.mediaId?.let { if (it.startsWith("/")) Uri.fromFile(java.io.File(it)) else Uri.parse(it) }
                         logPlaybackDiagnostics("mediaItemTransition")
                     }
 

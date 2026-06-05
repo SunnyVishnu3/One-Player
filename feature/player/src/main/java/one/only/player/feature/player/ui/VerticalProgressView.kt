@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,37 +48,48 @@ fun VerticalProgressView(
     Column(
         modifier = modifier
             .heightIn(max = 250.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.background)
-            .padding(8.dp),
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(Color.Black.copy(alpha = 0.5f))
+            .padding(vertical = 20.dp, horizontal = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             modifier = Modifier.size(width),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
-                text = normalizedValue.toString(),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    color = MaterialTheme.colorScheme.onBackground,
+                text = normalizedValue.toString() + "%",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    color = Color.White,
                 ),
-                autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
+                autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.titleSmall.fontSize),
             )
         }
         Box(
             modifier = Modifier
                 .weight(1f)
                 .width(width)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(Color.Black.copy(alpha = 0.3f)),
             contentAlignment = Alignment.BottomCenter,
         ) {
             Box(
                 modifier = Modifier
                     .width(width)
                     .fillMaxHeight(fillFraction)
-                    .background(if (isBoostActive) boostColor else MaterialTheme.colorScheme.primary),
+                    .background(
+                        if (isBoostActive) {
+                            SolidColor(boostColor)
+                        } else {
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    ),
             )
         }
         Box(
@@ -86,7 +99,7 @@ fun VerticalProgressView(
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onBackground,
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
     }

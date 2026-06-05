@@ -14,6 +14,7 @@ import one.only.player.core.data.repository.PreferencesRepository
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.PlayerControl
 import one.only.player.core.model.PlayerControlsStyle
+import one.only.player.core.model.SeekbarStyle
 import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.Resume
@@ -46,6 +47,7 @@ class PlayerPreferencesViewModel @Inject constructor(
             PlayerPreferencesUiEvent.ToggleAutoplay -> toggleAutoplay()
             PlayerPreferencesUiEvent.ToggleAutoPip -> toggleAutoPip()
             PlayerPreferencesUiEvent.ToggleAutoBackgroundPlay -> toggleAutoBackgroundPlay()
+            PlayerPreferencesUiEvent.ToggleUseSeekPreviewBubble -> toggleUseSeekPreviewBubble()
             PlayerPreferencesUiEvent.ToggleRememberBrightnessLevel -> toggleRememberBrightnessLevel()
             PlayerPreferencesUiEvent.ToggleRememberPlayerScreenOrientation -> toggleRememberPlayerScreenOrientation()
             is PlayerPreferencesUiEvent.UpdatePreferredPlayerOrientation -> updatePreferredPlayerOrientation(event.value)
@@ -54,6 +56,7 @@ class PlayerPreferencesViewModel @Inject constructor(
             is PlayerPreferencesUiEvent.UpdateControlAutoHideTimeout -> updateControlAutoHideTimeout(event.value)
             is PlayerPreferencesUiEvent.UpdatePlayerIconStyle -> updatePlayerIconStyle(event.value)
             is PlayerPreferencesUiEvent.UpdateControlsStyle -> updateControlsStyle(event.value)
+            is PlayerPreferencesUiEvent.UpdateSeekbarStyle -> updateSeekbarStyle(event.value)
             PlayerPreferencesUiEvent.TogglePlayerControlLabels -> togglePlayerControlLabels()
             is PlayerPreferencesUiEvent.UpdateHiddenPlayerControls -> updateHiddenPlayerControls(event.value)
         }
@@ -98,6 +101,14 @@ class PlayerPreferencesViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
                 it.copy(shouldAutoPlayInBackground = !it.shouldAutoPlayInBackground)
+            }
+        }
+    }
+
+    private fun toggleUseSeekPreviewBubble() {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(useSeekPreviewBubble = !it.useSeekPreviewBubble)
             }
         }
     }
@@ -173,6 +184,14 @@ class PlayerPreferencesViewModel @Inject constructor(
         }
     }
 
+    private fun updateSeekbarStyle(value: SeekbarStyle) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(seekbarStyle = value)
+            }
+        }
+    }
+
     private fun togglePlayerControlLabels() {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
@@ -201,6 +220,7 @@ sealed interface PlayerPreferenceDialog {
     data object ControlButtonsDialog : PlayerPreferenceDialog
     data object PlayerIconStyleDialog : PlayerPreferenceDialog
     data object ControlsStyleDialog : PlayerPreferenceDialog
+    data object SeekbarStyleDialog : PlayerPreferenceDialog
 }
 
 sealed interface PlayerPreferencesUiEvent {
@@ -209,6 +229,7 @@ sealed interface PlayerPreferencesUiEvent {
     data object ToggleAutoplay : PlayerPreferencesUiEvent
     data object ToggleAutoPip : PlayerPreferencesUiEvent
     data object ToggleAutoBackgroundPlay : PlayerPreferencesUiEvent
+    data object ToggleUseSeekPreviewBubble : PlayerPreferencesUiEvent
     data object ToggleRememberBrightnessLevel : PlayerPreferencesUiEvent
     data object ToggleRememberPlayerScreenOrientation : PlayerPreferencesUiEvent
     data object TogglePlayerControlLabels : PlayerPreferencesUiEvent
@@ -218,5 +239,6 @@ sealed interface PlayerPreferencesUiEvent {
     data class UpdateControlAutoHideTimeout(val value: Int) : PlayerPreferencesUiEvent
     data class UpdatePlayerIconStyle(val value: PlayerIconStyle) : PlayerPreferencesUiEvent
     data class UpdateControlsStyle(val value: PlayerControlsStyle) : PlayerPreferencesUiEvent
+    data class UpdateSeekbarStyle(val value: SeekbarStyle) : PlayerPreferencesUiEvent
     data class UpdateHiddenPlayerControls(val value: Set<PlayerControl>) : PlayerPreferencesUiEvent
 }

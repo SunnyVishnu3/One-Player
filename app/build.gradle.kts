@@ -124,6 +124,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
 
     implementation(libs.coil.compose)
+    implementation(files("libs/media3ext-release.aar"))
+    implementation(files("libs/mediainfo-release.aar"))
 
     // Hilt 依赖
     implementation(libs.hilt.android)
@@ -131,11 +133,11 @@ dependencies {
     ksp(libs.kotlin.metadata.jvm)
     kspAndroidTest(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-
-    implementation(libs.github.anilbeesetti.nextlib.mediainfo)
+    
     implementation(libs.commons.net)
     implementation(libs.okhttp)
     implementation(libs.smbj)
+    implementation(libs.androidx.profileinstaller)
 
     testImplementation(libs.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))

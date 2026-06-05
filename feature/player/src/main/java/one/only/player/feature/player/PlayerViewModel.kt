@@ -137,6 +137,12 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun updateAmbienceModeEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { it.copy(isAmbienceModeEnabled = isEnabled) }
+        }
+    }
+
     fun updateDecoderPriority(decoderPriority: DecoderPriority) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {

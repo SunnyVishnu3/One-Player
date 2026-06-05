@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
     implementation(libs.reorderable)
 
@@ -69,8 +70,6 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.ui.compose)
     implementation(libs.androidx.media3.session)
-    implementation(libs.github.anilbeesetti.nextlib.media3ext)
-    implementation(libs.github.anilbeesetti.nextlib.mediainfo)
     implementation(libs.github.peerless2012.ass.media)
 
     implementation(libs.kotlinx.coroutines.android)
@@ -88,4 +87,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso.core)
+
+    compileOnly(files("libs/media3ext-release.aar"))
+    compileOnly(files("libs/mediainfo-release.aar"))
 }

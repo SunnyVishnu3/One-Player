@@ -28,11 +28,13 @@ import one.only.player.core.common.extensions.isPipFeatureSupported
 import one.only.player.core.common.extensions.round
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.PlayerControlsStyle
+import one.only.player.core.model.SeekbarStyle
 import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.ScreenOrientation
 import one.only.player.core.ui.R
 import one.only.player.core.ui.components.ClickablePreferenceItem
+import one.only.player.core.ui.components.PreferenceItem
 import one.only.player.core.ui.components.ListSectionTitle
 import one.only.player.core.ui.components.NextTopAppBar
 import one.only.player.core.ui.components.PreferenceSlider
@@ -45,6 +47,13 @@ import one.only.player.core.ui.theme.OnlyPlayerTheme
 import one.only.player.settings.composables.OptionsDialog
 import one.only.player.settings.extensions.isEnabled
 import one.only.player.settings.extensions.name
+
+fun SeekbarStyle.name(): String = when (this) {
+    SeekbarStyle.Wavy -> "Wavy"
+    SeekbarStyle.Standard -> "Standard"
+    SeekbarStyle.Thick -> "Thick"
+    SeekbarStyle.Slim -> "Slim"
+}
 
 @Composable
 fun PlayerPreferencesScreen(
@@ -253,6 +262,21 @@ private fun PlayerPreferencesContent(
                     icon = NextIcons.Title,
                     isChecked = uiState.preferences.shouldHidePlayerControlLabels,
                     onClick = { onEvent(PlayerPreferencesUiEvent.TogglePlayerControlLabels) },
+                )
+                PreferenceSwitch(
+                    modifier = Modifier.testTag("switch_settings_player_seek_preview_bubble"),
+                    title = stringResource(id = R.string.pref_player_seek_preview_thumbfast_title),
+                    description = stringResource(id = R.string.pref_player_seek_preview_thumbfast_summary),
+                    icon = NextIcons.Image,
+                    isChecked = uiState.preferences.useSeekPreviewBubble,
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ToggleUseSeekPreviewBubble) },
+                )
+                ClickablePreferenceItem(
+                    modifier = Modifier.testTag("item_settings_player_seekbar_style"),
+                    title = "Seekbar Style",
+                    description = uiState.preferences.seekbarStyle.name(),
+                    icon = NextIcons.Style,
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.SeekbarStyleDialog)) },
                     isLastItem = true,
                 )
             }
@@ -329,6 +353,24 @@ private fun PlayerPreferencesContent(
                                 isSelected = it == uiState.preferences.controlsStyle,
                                 onClick = {
                                     onEvent(PlayerPreferencesUiEvent.UpdateControlsStyle(it))
+                                    onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
+                                },
+                            )
+                        }
+                    }
+                }
+                PlayerPreferenceDialog.SeekbarStyleDialog -> {
+                    OptionsDialog(
+                        text = "Seekbar Style",
+                        onDismissClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(null)) },
+                    ) {
+                        items(SeekbarStyle.entries.toTypedArray()) {
+                            RadioTextButton(
+                                modifier = Modifier.testTag("option_settings_player_seekbar_style_${it.name.lowercase()}"),
+                                text = it.name(),
+                                isSelected = it == uiState.preferences.seekbarStyle,
+                                onClick = {
+                                    onEvent(PlayerPreferencesUiEvent.UpdateSeekbarStyle(it))
                                     onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
                                 },
                             )

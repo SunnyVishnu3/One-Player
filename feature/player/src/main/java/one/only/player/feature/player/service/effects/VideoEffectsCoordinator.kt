@@ -27,10 +27,18 @@ internal class VideoEffectsCoordinator(
         decoderPriority = initialDecoderPriority,
     )
     private var activeEffect: VideoFiltersEffect? = null
+    private var activeAmbientEffect: DynamicAmbientEffect? = null
     private var isCurrentVideoHdr = false
     private var hasRenderedFirstFrameForCurrentItem = false
     private var pendingJob: Job? = null
     private var transition = VideoFilterTransition.default()
+    private var isAmbientModeEnabled: Boolean = false
+    private var ambientScaleX: Float = 1.0f
+    private var ambientScaleY: Float = 1.0f
+    private var ambientOffsetX: Float = 0.0f
+    private var ambientOffsetY: Float = 0.0f
+    private var ambientContainerWidth: Int = 1920
+    private var ambientContainerHeight: Int = 1080
 
     var currentFormat: Format? = null
         private set
@@ -63,6 +71,7 @@ internal class VideoEffectsCoordinator(
             decoderPriority = activeDecoderPriority,
         )
         activeEffect = null
+        activeAmbientEffect = null
         transition = VideoFilterTransition.default()
     }
 
@@ -102,6 +111,7 @@ internal class VideoEffectsCoordinator(
         preferences: PlayerPreferences,
         force: Boolean = false,
     ) {
+        isAmbientModeEnabled = preferences.isAmbienceModeEnabled
         schedule(
             player = player,
             videoFilters = preferences.toVideoFilterPreferences(),
@@ -117,6 +127,7 @@ internal class VideoEffectsCoordinator(
         preferences: PlayerPreferences,
     ) {
         if (player == null) return
+        isAmbientModeEnabled = preferences.isAmbienceModeEnabled
         schedule(
             player = player,
             videoFilters = preferences.toVideoFilterPreferences(),
@@ -139,6 +150,14 @@ internal class VideoEffectsCoordinator(
     }
 
     fun isAvailable(): Boolean = shouldApplyVideoEffects(activeDecoderPriority)
+
+    fun setAmbientModeEnabled(player: ExoPlayer?, isEnabled: Boolean, preferences: PlayerPreferences) {
+        if (isAmbientModeEnabled == isEnabled) return
+        isAmbientModeEnabled = isEnabled
+        if (player != null) {
+            apply(player, preferences, force = true)
+        }
+    }
 
     private fun schedule(
         player: ExoPlayer,
@@ -182,7 +201,10 @@ internal class VideoEffectsCoordinator(
         nextTransition: VideoFilterTransition,
     ) {
         val effect = activeEffect
-        val canUpdateActiveEffect = effect != null && shouldUseEffect(videoFilters, decoderPriority)
+        val ambientEffect = activeAmbientEffect
+        val canUpdateActiveEffect = effect != null && shouldUseEffect(videoFilters, decoderPriority) && 
+            (isAmbientModeEnabled == (ambientEffect != null))
+            
         if (canUpdateActiveEffect) {
             transition = nextTransition
             effect.updateTransition(nextTransition)
@@ -197,11 +219,8 @@ internal class VideoEffectsCoordinator(
         }
 
         val effects = buildEffects(nextTransition, decoderPriority)
-        if (!hasRenderedFirstFrameForCurrentItem && activeEffect == null && effects.isNotEmpty()) {
-            Logger.debug(TAG, "Defer setVideoEffects until first frame to resolve HDR state")
-            return
-        }
-        if (effects.isEmpty() && activeEffect == null) {
+
+        if (effects.isEmpty() && activeEffect == null && activeAmbientEffect == null) {
             currentState = VideoEffectsState(
                 filters = videoFilters,
                 decoderPriority = decoderPriority,
@@ -218,6 +237,7 @@ internal class VideoEffectsCoordinator(
             isPipelineInitialized = true,
         )
         activeEffect = effects.filterIsInstance<VideoFiltersEffect>().firstOrNull()
+        activeAmbientEffect = effects.filterIsInstance<DynamicAmbientEffect>().firstOrNull()
         player.setVideoEffects(effects)
         refreshPausedFrame(player)
         updateAvailability(player)
@@ -241,19 +261,65 @@ internal class VideoEffectsCoordinator(
         nextTransition: VideoFilterTransition,
         decoderPriority: DecoderPriority,
     ): List<Effect> {
-        if (!shouldUseEffect(nextTransition.targetFilters, decoderPriority)) return emptyList()
-        return listOf(
-            VideoFiltersEffect(
-                transition = nextTransition,
-                transitionDurationMs = VIDEO_FILTER_TRANSITION_DURATION_MS,
-            ),
-        )
+        if (!shouldApplyVideoEffects(decoderPriority)) return emptyList()
+
+        val effects = mutableListOf<Effect>()
+
+        if (shouldUseEffect(nextTransition.targetFilters, decoderPriority)) {
+            effects.add(
+                VideoFiltersEffect(
+                    transition = nextTransition,
+                    transitionDurationMs = VIDEO_FILTER_TRANSITION_DURATION_MS,
+                )
+            )
+        }
+
+        if (isAmbientModeEnabled && currentFormat != null) {
+            effects.add(
+                DynamicAmbientEffect(
+                    scaleX = ambientScaleX,
+                    scaleY = ambientScaleY,
+                    offsetX = ambientOffsetX,
+                    offsetY = ambientOffsetY,
+                    containerWidth = ambientContainerWidth,
+                    containerHeight = ambientContainerHeight,
+                )
+            )
+        }
+
+        return effects
+    }
+
+    fun updateAmbientParameters(
+        player: ExoPlayer?,
+        scaleX: Float,
+        scaleY: Float,
+        offsetX: Float,
+        offsetY: Float,
+        containerWidth: Int,
+        containerHeight: Int,
+    ) {
+        val sizeChanged = ambientContainerWidth != containerWidth || ambientContainerHeight != containerHeight
+        ambientScaleX = scaleX
+        ambientScaleY = scaleY
+        ambientOffsetX = offsetX
+        ambientOffsetY = offsetY
+        ambientContainerWidth = containerWidth
+        ambientContainerHeight = containerHeight
+
+        val ambientEffect = activeAmbientEffect
+        if (ambientEffect != null) {
+            ambientEffect.updateParameters(scaleX, scaleY, offsetX, offsetY, containerWidth, containerHeight)
+            if (sizeChanged && player != null) {
+                apply(player, currentPreferencesProvider(), force = true)
+            }
+        }
     }
 
     private fun shouldUseEffect(
         filters: VideoFilterPreferences,
         decoderPriority: DecoderPriority,
-    ): Boolean = shouldApplyVideoEffects(decoderPriority) && !isCurrentVideoHdr && filters.shouldCreateEffect()
+    ): Boolean = shouldApplyVideoEffects(decoderPriority) && filters.shouldCreateEffect()
 
     private fun currentPlayer(): ExoPlayer? = currentPlayerProvider()
 
@@ -305,6 +371,18 @@ internal fun PlayerPreferences.toVideoFilterPreferences(): VideoFilterPreference
             videoSharpening.coerceIn(PlayerPreferences.DEFAULT_VIDEO_SHARPENING, PlayerPreferences.MAX_VIDEO_SHARPENING)
         } else {
             PlayerPreferences.DEFAULT_VIDEO_SHARPENING
+        },
+        isLineDarkenEnabled = isVideoLineDarkenFilterEnabled,
+        lineDarken = if (isVideoLineDarkenFilterEnabled) {
+            videoLineDarken.coerceIn(PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN, PlayerPreferences.MAX_VIDEO_LINE_DARKEN)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN
+        },
+        isLineThinEnabled = isVideoLineThinFilterEnabled,
+        lineThin = if (isVideoLineThinFilterEnabled) {
+            videoLineThin.coerceIn(PlayerPreferences.DEFAULT_VIDEO_LINE_THIN, PlayerPreferences.MAX_VIDEO_LINE_THIN)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_LINE_THIN
         },
     )
     return if (filters.shouldCreateEffect()) filters else VideoFilterPreferences.default()

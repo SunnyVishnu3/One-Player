@@ -72,7 +72,7 @@ fun SubtitleView(
     )
 
     AndroidView(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         factory = { context ->
             SubtitleContainer(context).apply {
                 subtitleView.applyDefaultSubtitleStyle()

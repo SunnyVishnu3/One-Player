@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import one.only.player.core.model.AppTheme
+import one.only.player.core.model.SeekbarStyle
 import one.only.player.core.model.ThemeConfig
 import one.only.player.core.ui.R
 import one.only.player.core.ui.components.ClickablePreferenceItem
@@ -114,6 +116,21 @@ private fun AppearancePreferencesContent(
                         onClick = { onEvent(AppearancePreferencesEvent.ToggleUseDynamicColors) },
                     )
                 }
+                ClickablePreferenceItem(
+                    modifier = Modifier.testTag("item_settings_appearance_app_theme"),
+                    title = stringResource(id = R.string.app_theme_palette),
+                    description = uiState.preferences.appTheme.name,
+                    icon = NextIcons.Appearance,
+                    onClick = { onEvent(AppearancePreferencesEvent.ShowDialog(AppearancePreferenceDialog.AppThemePalette)) },
+                )
+                PreferenceSwitch(
+                    modifier = Modifier.testTag("switch_settings_appearance_high_contrast_dark"),
+                    title = stringResource(id = R.string.high_contrast_dark_theme),
+                    description = stringResource(id = R.string.high_contrast_dark_theme_description),
+                    icon = NextIcons.DarkMode,
+                    isChecked = uiState.preferences.useHighContrastDarkTheme,
+                    onClick = { onEvent(AppearancePreferencesEvent.ToggleUseHighContrastDarkTheme) },
+                )
                 PreferenceSwitch(
                     title = stringResource(id = R.string.home_title_long_press_to_root),
                     description = stringResource(id = R.string.home_title_long_press_to_root_description),
@@ -146,7 +163,42 @@ private fun AppearancePreferencesContent(
                         }
                     }
                 }
-
+                AppearancePreferenceDialog.AppThemePalette -> {
+                    OptionsDialog(
+                        text = stringResource(id = R.string.app_theme_palette),
+                        onDismissClick = { onEvent(AppearancePreferencesEvent.ShowDialog(null)) },
+                    ) {
+                        items(AppTheme.entries.toTypedArray()) {
+                            RadioTextButton(
+                                modifier = Modifier.testTag("option_settings_appearance_app_theme_${it.name.lowercase()}"),
+                                text = it.name,
+                                isSelected = (it == uiState.preferences.appTheme),
+                                onClick = {
+                                    onEvent(AppearancePreferencesEvent.UpdateAppTheme(it))
+                                    onEvent(AppearancePreferencesEvent.ShowDialog(null))
+                                },
+                            )
+                        }
+                    }
+                }
+                AppearancePreferenceDialog.SeekbarStyle -> {
+                    OptionsDialog(
+                        text = stringResource(id = R.string.pref_seekbar_style_title),
+                        onDismissClick = { onEvent(AppearancePreferencesEvent.ShowDialog(null)) },
+                    ) {
+                        items(SeekbarStyle.entries.toTypedArray()) {
+                            RadioTextButton(
+                                modifier = Modifier.testTag("option_settings_appearance_seekbar_${it.name.lowercase()}"),
+                                text = it.name,
+                                isSelected = (it == uiState.preferences.seekbarStyle),
+                                onClick = {
+                                    onEvent(AppearancePreferencesEvent.UpdateSeekbarStyle(it))
+                                    onEvent(AppearancePreferencesEvent.ShowDialog(null))
+                                },
+                            )
+                        }
+                    }
+                }
                 AppearancePreferenceDialog.AppLanguage -> {
                     OptionsDialog(
                         text = stringResource(id = R.string.app_language),

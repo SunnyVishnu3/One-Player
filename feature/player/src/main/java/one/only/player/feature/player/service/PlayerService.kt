@@ -228,6 +228,9 @@ class PlayerService : MediaSessionService() {
     private var pendingRememberedSubtitleSelection: PendingSubtitleSelection? = null
     private var assHandler: AssHandler? = null
     private var activeDecoderPriority: DecoderPriority = DecoderPriority.AUTOMATIC
+    private var currentVideoFps: Float = 0f
+    private var lastFpsQueryTime: Long = 0L
+    private var lastFpsRenderedCount: Int = 0
     private lateinit var fastStartMediaSourceFactory: DefaultMediaSourceFactory
     private lateinit var preciseSeekMediaSourceFactory: DefaultMediaSourceFactory
     private var sessionLoadErrorHandlingPolicy: LoadErrorHandlingPolicy? = null
@@ -278,13 +281,19 @@ class PlayerService : MediaSessionService() {
     private val playbackStateListener = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             super.onMediaItemTransition(mediaItem, reason)
+            currentVideoFps = 0f
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
                 handleRepeatedPlayback(mediaSession?.player ?: return)
                 return
             }
             (mediaSession?.player as? ExoPlayer)?.let { player ->
-                videoEffectsCoordinator.resetForMediaItem(player)
+                if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+                    videoEffectsCoordinator.resetForMediaItem(player)
+                }
                 applySeekParameters(player)
+                if (mediaItem != null) {
+                    videoEffectsCoordinator.apply(player, playerPreferences, force = true)
+                }
             }
             preciseSeekCoordinator.resetForMediaItem(mediaItem?.mediaId)
             isMediaItemReady = false
@@ -719,6 +728,8 @@ class PlayerService : MediaSessionService() {
         failedPlayer.removeListener(playbackStateListener)
         failedPlayer.removeAnalyticsListener(startupAnalyticsListener)
         session.player = retryPlayer
+        videoEffectsCoordinator.resetPipeline()
+        videoEffectsCoordinator.apply(retryPlayer, playerPreferences, force = true)
         retryPlayer.prepare()
         failedPlayer.clearMediaItems()
         failedPlayer.stop()
@@ -805,6 +816,8 @@ class PlayerService : MediaSessionService() {
         currentPlayer.removeListener(playbackStateListener)
         currentPlayer.removeAnalyticsListener(startupAnalyticsListener)
         session.player = nextPlayer
+        videoEffectsCoordinator.resetPipeline()
+        videoEffectsCoordinator.apply(nextPlayer, playerPreferences, force = true)
         nextPlayer.prepare()
         currentPlayer.clearMediaItems()
         currentPlayer.stop()
@@ -1145,6 +1158,10 @@ class PlayerService : MediaSessionService() {
         videoGamma = getFloat(CustomCommands.VIDEO_GAMMA_KEY, PlayerPreferences.DEFAULT_VIDEO_GAMMA),
         isVideoSharpeningFilterEnabled = getBoolean(CustomCommands.IS_VIDEO_SHARPENING_FILTER_ENABLED_KEY, false),
         videoSharpening = getFloat(CustomCommands.VIDEO_SHARPENING_KEY, PlayerPreferences.DEFAULT_VIDEO_SHARPENING),
+        isVideoLineDarkenFilterEnabled = getBoolean(CustomCommands.IS_VIDEO_LINE_DARKEN_FILTER_ENABLED_KEY, false),
+        videoLineDarken = getFloat(CustomCommands.VIDEO_LINE_DARKEN_KEY, PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN),
+        isVideoLineThinFilterEnabled = getBoolean(CustomCommands.IS_VIDEO_LINE_THIN_FILTER_ENABLED_KEY, false),
+        videoLineThin = getFloat(CustomCommands.VIDEO_LINE_THIN_KEY, PlayerPreferences.DEFAULT_VIDEO_LINE_THIN),
     )
 
     private fun String.toLogSummary(): String = Uri.parse(this).toLogSummary()
@@ -1331,11 +1348,27 @@ class PlayerService : MediaSessionService() {
 
                 CustomCommands.GET_VIDEO_FORMAT -> {
                     val format = videoEffectsCoordinator.currentFormat
+                    val exoPlayer = mediaSession?.player as? ExoPlayer
+                    val counters = exoPlayer?.videoDecoderCounters
+                    val now = android.os.SystemClock.elapsedRealtime()
+                    if (counters != null) {
+                        val currentRendered = counters.renderedOutputBufferCount
+                        if (lastFpsQueryTime > 0L) {
+                            val timeDiff = now - lastFpsQueryTime
+                            val frameDiff = currentRendered - lastFpsRenderedCount
+                            if (timeDiff > 0L && frameDiff >= 0) {
+                                currentVideoFps = (frameDiff * 1000f) / timeDiff
+                            }
+                        }
+                        lastFpsQueryTime = now
+                        lastFpsRenderedCount = currentRendered
+                    }
                     return@future SessionResult(
                         SessionResult.RESULT_SUCCESS,
                         Bundle().apply {
                             putString(CustomCommands.VIDEO_DECODER_PRIORITY_KEY, activeDecoderPriority.name)
                             putString(CustomCommands.VIDEO_DECODER_NAME_KEY, videoEffectsCoordinator.currentDecoderName)
+                            putFloat(CustomCommands.VIDEO_FPS_KEY, currentVideoFps)
                             putInt(CustomCommands.VIDEO_WIDTH_KEY, format?.width ?: 0)
                             putInt(CustomCommands.VIDEO_HEIGHT_KEY, format?.height ?: 0)
                             putInt(CustomCommands.VIDEO_COLOR_TRANSFER_KEY, format?.colorInfo?.colorTransfer ?: C.INDEX_UNSET)
@@ -1346,6 +1379,32 @@ class PlayerService : MediaSessionService() {
                             putBoolean(CustomCommands.IS_VIDEO_EFFECTS_ACTIVE_KEY, videoEffectsCoordinator.isEffectActive)
                         },
                     )
+                }
+                
+                CustomCommands.SET_AMBIENT_MODE_ENABLED -> {
+                    val isEnabled = args.getBoolean(CustomCommands.IS_AMBIENT_MODE_ENABLED_KEY)
+                    videoEffectsCoordinator.setAmbientModeEnabled(mediaSession?.player as? ExoPlayer, isEnabled, playerPreferences)
+                    return@future SessionResult(SessionResult.RESULT_SUCCESS)
+                }
+
+                CustomCommands.UPDATE_AMBIENT_PARAMETERS -> {
+                    val scaleX = args.getFloat(CustomCommands.AMBIENT_SCALE_X_KEY, 1.0f)
+                    val scaleY = args.getFloat(CustomCommands.AMBIENT_SCALE_Y_KEY, 1.0f)
+                    val offsetX = args.getFloat(CustomCommands.AMBIENT_OFFSET_X_KEY, 0.0f)
+                    val offsetY = args.getFloat(CustomCommands.AMBIENT_OFFSET_Y_KEY, 0.0f)
+                    val containerWidth = args.getInt(CustomCommands.CONTAINER_WIDTH_KEY, 1920)
+                    val containerHeight = args.getInt(CustomCommands.CONTAINER_HEIGHT_KEY, 1080)
+                    
+                    videoEffectsCoordinator.updateAmbientParameters(
+                        player = mediaSession?.player as? ExoPlayer,
+                        scaleX = scaleX,
+                        scaleY = scaleY,
+                        offsetX = offsetX,
+                        offsetY = offsetY,
+                        containerWidth = containerWidth,
+                        containerHeight = containerHeight,
+                    )
+                    return@future SessionResult(SessionResult.RESULT_SUCCESS)
                 }
 
                 CustomCommands.GET_SUBTITLE_DELAY -> {
@@ -1461,6 +1520,26 @@ class PlayerService : MediaSessionService() {
                 applySeekParameters(it)
                 it.addListener(playbackStateListener)
                 it.addAnalyticsListener(startupAnalyticsListener)
+                it.setVideoFrameMetadataListener(object : androidx.media3.exoplayer.video.VideoFrameMetadataListener {
+                    private var frameCount = 0
+                    private var lastTimeMs = System.currentTimeMillis()
+
+                    override fun onVideoFrameAboutToBeRendered(
+                        presentationTimeUs: Long,
+                        releaseTimeNs: Long,
+                        format: androidx.media3.common.Format,
+                        mediaFormat: android.media.MediaFormat?
+                    ) {
+                        frameCount++
+                        val now = System.currentTimeMillis()
+                        val diff = now - lastTimeMs
+                        if (diff >= 1000) {
+                            currentVideoFps = (frameCount * 1000f) / diff
+                            frameCount = 0
+                            lastTimeMs = now
+                        }
+                    }
+                })
                 it.pauseAtEndOfMediaItems = !preferences.shouldAutoPlay
                 it.repeatMode = when (preferences.loopMode) {
                     LoopMode.OFF -> Player.REPEAT_MODE_OFF
@@ -1482,7 +1561,10 @@ class PlayerService : MediaSessionService() {
         }
         serviceScope.launch {
             preferencesRepository.playerPreferences
-                .distinctUntilChanged { old, new -> old.toVideoFilterPreferences() == new.toVideoFilterPreferences() }
+                .distinctUntilChanged { old, new -> 
+                    old.toVideoFilterPreferences() == new.toVideoFilterPreferences() &&
+                    old.isAmbienceModeEnabled == new.isAmbienceModeEnabled
+                }
                 .collect(videoEffectsCoordinator::apply)
         }
         serviceScope.launch {
@@ -1566,6 +1648,7 @@ class PlayerService : MediaSessionService() {
                     ),
                 )
             }.build()
+            videoEffectsCoordinator.resetPipeline()
         } catch (e: Exception) {
             Logger.error(TAG, "Failed to create media session", e)
         }

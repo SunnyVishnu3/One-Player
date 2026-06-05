@@ -53,6 +53,7 @@ internal fun PlayerCustomizableControlButton(
     onPlayInBackgroundClick: () -> Unit,
     onLoopClick: (() -> Unit)? = null,
     onShuffleClick: (() -> Unit)? = null,
+    onStatsClick: () -> Unit = {},
     onSleepTimerClick: (() -> Unit)? = null,
     sleepTimerState: SleepTimerState? = null,
 ) {
@@ -353,6 +354,23 @@ internal fun PlayerCustomizableControlButton(
             }
         }
 
+        PlayerControl.STATS -> {
+            PlayerButton(
+                modifier = buttonModifier,
+                onClick = onStatsClick,
+                isSelected = isSelected,
+                label = label,
+                shouldDimWhenUnselected = isCustomizingControls,
+                shouldShowCustomizeFrame = isCustomizingControls,
+                isOutlineOnly = isPlaceholder,
+            ) {
+                Icon(
+                    imageVector = NextIcons.Info,
+                    contentDescription = "btn_stats",
+                )
+            }
+        }
+
         PlayerControl.BACK,
         PlayerControl.PREVIOUS,
         PlayerControl.PLAY_PAUSE,
@@ -379,6 +397,7 @@ private fun PlayerControl.label(): String = when (this) {
     PlayerControl.SHUFFLE -> stringResource(R.string.shuffle)
     PlayerControl.SLEEP_TIMER -> stringResource(R.string.sleep_timer)
     PlayerControl.ROTATE -> stringResource(R.string.screen_rotation)
+    PlayerControl.STATS -> stringResource(R.string.stats_for_nerds)
     PlayerControl.BACK,
     PlayerControl.PREVIOUS,
     PlayerControl.PLAY_PAUSE,

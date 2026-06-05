@@ -45,6 +45,7 @@ import one.only.player.feature.player.ui.PlayerGestures
 import one.only.player.feature.player.ui.ShutterView
 import one.only.player.feature.player.ui.SubtitleConfiguration
 import one.only.player.feature.player.ui.SubtitleView
+import one.only.player.feature.player.service.updateAmbientParameters
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -84,7 +85,7 @@ fun PlayerContentFrame(
             }
     }
     var lastLoggedSurfaceLayout by remember { mutableStateOf("") }
-    val surfaceType = if (shouldUseTextureView) SURFACE_TYPE_TEXTURE_VIEW else SURFACE_TYPE_SURFACE_VIEW
+    val surfaceType = SURFACE_TYPE_TEXTURE_VIEW
 
     // Media3 1.10.1 的 videoSizeDp 名带 Dp 但实际存视频原始 px；ASS wrapper 不触发 onVideoSizeChanged，回退 metadata
     val videoSizePx = presentationState.videoSizeDp ?: run {
@@ -114,13 +115,41 @@ fun PlayerContentFrame(
                 VideoContentScale.CROP -> max(fillX, fillY).let { it to it }
                 VideoContentScale.HUNDRED_PERCENT -> 1f to 1f
             }
+
+            val mediaController = player as? androidx.media3.session.MediaController
+            if (shouldUseTextureView && mediaController != null) {
+                LaunchedEffect(
+                    containerWidth,
+                    containerHeight,
+                    videoWidth,
+                    videoHeight,
+                    baseScaleX,
+                    baseScaleY,
+                    videoZoomAndContentScaleState.zoom,
+                    videoZoomAndContentScaleState.offset,
+                ) {
+                    val scaleXRelative = (videoWidth * baseScaleX * videoZoomAndContentScaleState.zoom) / containerWidth
+                    val scaleYRelative = (videoHeight * baseScaleY * videoZoomAndContentScaleState.zoom) / containerHeight
+                    val offsetXRelative = videoZoomAndContentScaleState.offset.x / containerWidth
+                    val offsetYRelative = -videoZoomAndContentScaleState.offset.y / containerHeight
+                    
+                    mediaController.updateAmbientParameters(
+                        scaleX = scaleXRelative,
+                        scaleY = scaleYRelative,
+                        offsetX = offsetXRelative,
+                        offsetY = offsetYRelative,
+                        containerWidth = containerWidth.toInt(),
+                        containerHeight = containerHeight.toInt(),
+                    )
+                }
+            }
             val surfaceWidthDp = with(density) { videoWidth.toDp() }
             val surfaceHeightDp = with(density) { videoHeight.toDp() }
 
-            PlayerSurface(
-                player = player,
-                surfaceType = surfaceType,
-                modifier = Modifier
+            val surfaceModifier = if (shouldUseTextureView) {
+                Modifier.fillMaxSize()
+            } else {
+                Modifier
                     .requiredSize(surfaceWidthDp, surfaceHeightDp)
                     .graphicsLayer {
                         scaleX = baseScaleX * videoZoomAndContentScaleState.zoom
@@ -128,6 +157,12 @@ fun PlayerContentFrame(
                         translationX = videoZoomAndContentScaleState.offset.x
                         translationY = videoZoomAndContentScaleState.offset.y
                     }
+            }
+ 
+            PlayerSurface(
+                player = player,
+                surfaceType = surfaceType,
+                modifier = surfaceModifier
                     .onGloballyPositioned {
                         val bounds = it.boundsInWindow()
                         val rect = Rect(
@@ -154,13 +189,22 @@ fun PlayerContentFrame(
                     Modifier
                         .requiredSize(surfaceWidthDp, surfaceHeightDp)
                         .graphicsLayer {
-                            scaleX = subtitleScale
-                            scaleY = subtitleScale
+                            scaleX = subtitleScale * videoZoomAndContentScaleState.zoom
+                            scaleY = subtitleScale * videoZoomAndContentScaleState.zoom
+                            translationX = videoZoomAndContentScaleState.offset.x
+                            translationY = videoZoomAndContentScaleState.offset.y
                         }
                 } else {
                     val subtitleWidthDp = with(density) { min(containerWidth, videoWidth * baseScaleX).toDp() }
                     val subtitleHeightDp = with(density) { min(containerHeight, videoHeight * baseScaleY).toDp() }
-                    Modifier.requiredSize(subtitleWidthDp, subtitleHeightDp)
+                    Modifier
+                        .requiredSize(subtitleWidthDp, subtitleHeightDp)
+                        .graphicsLayer {
+                            scaleX = videoZoomAndContentScaleState.zoom
+                            scaleY = videoZoomAndContentScaleState.zoom
+                            translationX = videoZoomAndContentScaleState.offset.x
+                            translationY = videoZoomAndContentScaleState.offset.y
+                        }
                 }
                 SubtitleView(
                     modifier = subtitleModifier,

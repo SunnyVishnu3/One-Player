@@ -202,6 +202,10 @@ private fun VideoFiltersEditor(
                 videoGamma = PlayerPreferences.DEFAULT_VIDEO_GAMMA,
                 isVideoSharpeningFilterEnabled = false,
                 videoSharpening = PlayerPreferences.DEFAULT_VIDEO_SHARPENING,
+                isVideoLineDarkenFilterEnabled = false,
+                videoLineDarken = PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN,
+                isVideoLineThinFilterEnabled = false,
+                videoLineThin = PlayerPreferences.DEFAULT_VIDEO_LINE_THIN,
             )
         }
     }
@@ -403,6 +407,38 @@ private fun videoFilterSliderSpecs(
             }
         },
         onValueChange = { onUpdatePreferences { preferences -> preferences.copy(videoSharpening = it) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_line_darken),
+        value = preferences.videoLineDarken,
+        valueRange = PlayerPreferences.DEFAULT_VIDEO_LINE_DARKEN..PlayerPreferences.MAX_VIDEO_LINE_DARKEN,
+        valueText = stringResource(R.string.percent, (preferences.videoLineDarken * 100).toInt()),
+        testTag = "slider_video_line_darken",
+        switchTestTag = "switch_video_line_darken",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoLineDarkenFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.copy(isVideoLineDarkenFilterEnabled = !preferences.isVideoLineDarkenFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.copy(videoLineDarken = it) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_line_thin),
+        value = preferences.videoLineThin,
+        valueRange = PlayerPreferences.DEFAULT_VIDEO_LINE_THIN..PlayerPreferences.MAX_VIDEO_LINE_THIN,
+        valueText = stringResource(R.string.percent, (preferences.videoLineThin * 100).toInt()),
+        testTag = "slider_video_line_thin",
+        switchTestTag = "switch_video_line_thin",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoLineThinFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.copy(isVideoLineThinFilterEnabled = !preferences.isVideoLineThinFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.copy(videoLineThin = it) } },
     ),
 )
 

@@ -107,6 +107,10 @@ internal class VideoFiltersEffect(
             glProgram.setFloatUniform("uGamma", filters.gamma)
             val sharpness = kotlin.math.sqrt(filters.sharpening.coerceAtLeast(0f)) * SHARPNESS_SCALE
             glProgram.setFloatUniform("uSharpness", sharpness)
+            val lineDarken = kotlin.math.sqrt(filters.lineDarken.coerceAtLeast(0f)) * LINE_DARKEN_SCALE
+            glProgram.setFloatUniform("uLineDarken", lineDarken)
+            val lineThin = kotlin.math.sqrt(filters.lineThin.coerceAtLeast(0f)) * LINE_THIN_SCALE
+            glProgram.setFloatUniform("uLineThin", lineThin)
         }
 
         private fun createGlProgram(): GlProgram = try {
@@ -134,9 +138,11 @@ internal class VideoFiltersEffect(
     }
 
     private companion object {
-        private const val POSITION_COMPONENT_COUNT = 2
+        private const val POSITION_COMPONENT_COUNT = 4
         private const val VERTEX_COUNT = 4
-        private const val SHARPNESS_SCALE = 1.0f
+        private const val SHARPNESS_SCALE = 3.0f
+        private const val LINE_DARKEN_SCALE = 1.5f
+        private const val LINE_THIN_SCALE = 1.5f
 
         private const val VERTEX_SHADER = """
             #version 100
@@ -164,6 +170,8 @@ internal class VideoFiltersEffect(
             uniform float uHue;
             uniform float uGamma;
             uniform float uSharpness;
+            uniform float uLineDarken;
+            uniform float uLineThin;
             varying vec2 vTexSamplingCoord;
 
             vec3 rotateHue(vec3 color, float hue) {
@@ -197,7 +205,8 @@ internal class VideoFiltersEffect(
                 color = clamp((color - vec3(0.5)) * (1.0 + uContrast) + vec3(0.5), 0.0, 1.0);
               }
               if (uHue != 0.0) {
-                color = clamp(rotateHue(color, uHue), 0.0, 1.0);
+                float hueRadians = uHue * 0.0174533;
+                color = clamp(rotateHue(color, hueRadians), 0.0, 1.0);
               }
               if (uSaturation != 0.0) {
                 luma = dot(color, vec3(0.299, 0.587, 0.114));
@@ -209,21 +218,69 @@ internal class VideoFiltersEffect(
               return color;
             }
 
+             float get_luma(vec3 rgb) {
+              return dot(rgb, vec3(0.299, 0.587, 0.114));
+            }
+
             void main() {
-              vec4 center = texture2D(uTexSampler, vTexSamplingCoord);
+              vec2 currentCoord = vTexSamplingCoord;
+
+              if (uLineThin > 0.0) {
+                 float nw = get_luma(texture2D(uTexSampler, currentCoord + vec2(-uTexelSize.x, -uTexelSize.y)).rgb);
+                 float ne = get_luma(texture2D(uTexSampler, currentCoord + vec2(uTexelSize.x, -uTexelSize.y)).rgb);
+                 float sw = get_luma(texture2D(uTexSampler, currentCoord + vec2(-uTexelSize.x, uTexelSize.y)).rgb);
+                 float se = get_luma(texture2D(uTexSampler, currentCoord + vec2(uTexelSize.x, uTexelSize.y)).rgb);
+                 float n = get_luma(texture2D(uTexSampler, currentCoord + vec2(0.0, -uTexelSize.y)).rgb);
+                 float s = get_luma(texture2D(uTexSampler, currentCoord + vec2(0.0, uTexelSize.y)).rgb);
+                 float e = get_luma(texture2D(uTexSampler, currentCoord + vec2(uTexelSize.x, 0.0)).rgb);
+                 float w = get_luma(texture2D(uTexSampler, currentCoord + vec2(-uTexelSize.x, 0.0)).rgb);
+                 
+                 float sx = (ne + 2.0*e + se) - (nw + 2.0*w + sw);
+                 float sy = (sw + 2.0*s + se) - (nw + 2.0*n + ne);
+                 vec2 dir = vec2(sx, sy);
+                 vec2 dd = (dir / (length(dir) + 0.01)) * vec2(uTexelSize.x, uTexelSize.y) * uLineThin * 1.5;
+                 currentCoord += dd;
+              }
+
+              vec4 center = texture2D(uTexSampler, currentCoord);
               vec3 sourceColor = center.rgb;
 
-              if (uSharpness > 0.0) {
-                vec3 north = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, -uTexelSize.y)).rgb;
-                vec3 south = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, uTexelSize.y)).rgb;
-                vec3 west = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, 0.0)).rgb;
-                vec3 east = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, 0.0)).rgb;
-                vec3 northwest = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, -uTexelSize.y)).rgb;
-                vec3 northeast = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, -uTexelSize.y)).rgb;
-                vec3 southwest = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, uTexelSize.y)).rgb;
-                vec3 southeast = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, uTexelSize.y)).rgb;
-                vec3 blur = center.rgb * 0.25 + (north + south + west + east) * 0.125 + (northwest + northeast + southwest + southeast) * 0.0625;
-                sourceColor = clamp(center.rgb + (center.rgb - blur) * uSharpness, 0.0, 1.0);
+              if (uLineDarken > 0.0 || uSharpness > 0.0) {
+                 vec3 c_tl = texture2D(uTexSampler, currentCoord + vec2(-1.0, -1.0) * uTexelSize).rgb;
+                 vec3 c_t  = texture2D(uTexSampler, currentCoord + vec2(0.0, -1.0) * uTexelSize).rgb;
+                 vec3 c_tr = texture2D(uTexSampler, currentCoord + vec2(1.0, -1.0) * uTexelSize).rgb;
+                 vec3 c_l  = texture2D(uTexSampler, currentCoord + vec2(-1.0, 0.0) * uTexelSize).rgb;
+                 vec3 c_r  = texture2D(uTexSampler, currentCoord + vec2(1.0, 0.0) * uTexelSize).rgb;
+                 vec3 c_bl = texture2D(uTexSampler, currentCoord + vec2(-1.0, 1.0) * uTexelSize).rgb;
+                 vec3 c_b  = texture2D(uTexSampler, currentCoord + vec2(0.0, 1.0) * uTexelSize).rgb;
+                 vec3 c_br = texture2D(uTexSampler, currentCoord + vec2(1.0, 1.0) * uTexelSize).rgb;
+
+                 float l_c  = get_luma(sourceColor);
+                 float l_tl = get_luma(c_tl);
+                 float l_t  = get_luma(c_t);
+                 float l_tr = get_luma(c_tr);
+                 float l_l  = get_luma(c_l);
+                 float l_r  = get_luma(c_r);
+                 float l_bl = get_luma(c_bl);
+                 float l_b  = get_luma(c_b);
+                 float l_br = get_luma(c_br);
+
+                 if (uLineDarken > 0.0) {
+                    float blurredLuma = (l_t + l_b + l_r + l_l + l_c * 4.0) / 8.0;
+                    float diff = min(l_c - blurredLuma, 0.0);
+                    sourceColor = clamp(sourceColor + vec3(diff * uLineDarken * 2.0), 0.0, 1.0);
+                 }
+
+                 if (uSharpness > 0.0) {
+                    vec3 minColor = min(sourceColor, min(min(min(c_tl, c_t), min(c_tr, c_l)), min(min(c_r, c_bl), min(c_b, c_br))));
+                    vec3 maxColor = max(sourceColor, max(max(max(c_tl, c_t), max(c_tr, c_l)), max(max(c_r, c_bl), max(c_b, c_br))));
+                    
+                    // Gaussian 3x3 blur approximation
+                    vec3 blurred = (c_tl + c_tr + c_bl + c_br + 2.0 * (c_t + c_l + c_r + c_b) + 4.0 * sourceColor) / 16.0;
+                    vec3 diff = sourceColor - blurred;
+                    vec3 sharpened = sourceColor + uSharpness * diff;
+                    sourceColor = clamp(sharpened, minColor, maxColor);
+                 }
               }
 
               gl_FragColor = vec4(applyColorFilters(sourceColor), center.a);

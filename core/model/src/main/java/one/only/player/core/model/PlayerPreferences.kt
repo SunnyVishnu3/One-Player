@@ -28,10 +28,15 @@ data class PlayerPreferences(
     val videoGamma: Float = DEFAULT_VIDEO_GAMMA,
     val isVideoSharpeningFilterEnabled: Boolean = false,
     val videoSharpening: Float = DEFAULT_VIDEO_SHARPENING,
+    val isVideoLineDarkenFilterEnabled: Boolean = false,
+    val videoLineDarken: Float = DEFAULT_VIDEO_LINE_DARKEN,
+    val isVideoLineThinFilterEnabled: Boolean = false,
+    val videoLineThin: Float = DEFAULT_VIDEO_LINE_THIN,
     val shouldAutoPlay: Boolean = true,
     val shouldAutoEnterPip: Boolean = true,
     val shouldAutoPlayInBackground: Boolean = false,
     val loopMode: LoopMode = LoopMode.OFF,
+    val isAmbienceModeEnabled: Boolean = false,
 
     // 手势控制
     @Deprecated(message = "Use individual isVolumeSwipeGestureEnabled and isBrightnessSwipeGestureEnabled instead")
@@ -60,6 +65,8 @@ data class PlayerPreferences(
     val shouldHidePlayerButtonsBackground: Boolean = false,
     val shouldHidePlayerControlLabels: Boolean = false,
     val playerIconStyle: PlayerIconStyle = PlayerIconStyle.TONAL,
+    val useSeekPreviewBubble: Boolean = true,
+    val seekbarStyle: SeekbarStyle = SeekbarStyle.Wavy,
 
     // 音频偏好
     val preferredAudioLanguage: String = "",
@@ -115,6 +122,10 @@ data class PlayerPreferences(
         const val MAX_VIDEO_GAMMA = 3f
         const val DEFAULT_VIDEO_SHARPENING = 0f
         const val MAX_VIDEO_SHARPENING = 1f
+        const val DEFAULT_VIDEO_LINE_DARKEN = 0f
+        const val MAX_VIDEO_LINE_DARKEN = 1f
+        const val DEFAULT_VIDEO_LINE_THIN = 0f
+        const val MAX_VIDEO_LINE_THIN = 1f
         const val MIN_LONG_PRESS_CONTROLS_SPEED = 0.2f
         const val MAX_LONG_PRESS_CONTROLS_SPEED = 4.0f
         const val DEFAULT_SUBTITLE_TEXT_SIZE = 16f
@@ -166,6 +177,10 @@ fun PlayerPreferences.withVideoFiltersFrom(preferences: PlayerPreferences): Play
     videoGamma = preferences.videoGamma,
     isVideoSharpeningFilterEnabled = preferences.isVideoSharpeningFilterEnabled,
     videoSharpening = preferences.videoSharpening,
+    isVideoLineDarkenFilterEnabled = preferences.isVideoLineDarkenFilterEnabled,
+    videoLineDarken = preferences.videoLineDarken,
+    isVideoLineThinFilterEnabled = preferences.isVideoLineThinFilterEnabled,
+    videoLineThin = preferences.videoLineThin,
 )
 
 @Serializable
@@ -191,4 +206,5 @@ enum class PlayerControl {
     SHUFFLE,
     SLEEP_TIMER,
     ROTATE,
+    STATS,
 }

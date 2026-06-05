@@ -74,6 +74,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
+import one.only.player.feature.player.service.CustomCommands
+import one.only.player.feature.player.service.getVideoFormatDebugInfo
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import java.util.Locale
@@ -133,6 +136,7 @@ import one.only.player.feature.player.ui.SubtitleSelectorContent
 import one.only.player.feature.player.ui.VerticalProgressView
 import one.only.player.feature.player.ui.VideoContentScaleSelectorContent
 import one.only.player.feature.player.ui.controls.ControlsBottomModernView
+import one.only.player.feature.player.ui.components.DeviceStatsOverlay
 import one.only.player.feature.player.ui.controls.ControlsBottomView
 import one.only.player.feature.player.ui.controls.ControlsTopModernView
 import one.only.player.feature.player.ui.controls.ControlsTopView
@@ -338,7 +342,9 @@ internal fun MediaPlayerScreen(
     var shouldShowOverlay by remember { mutableStateOf(false) }
     var videoFiltersInitialPreferences by remember { mutableStateOf<PlayerPreferences?>(null) }
     var subtitleStylePreviewPreferences by remember { mutableStateOf<PlayerPreferences?>(null) }
-    var isAmbienceModeEnabled by remember { mutableStateOf(false) }
+    var isAmbienceModeEnabled by remember(playerPreferences.isAmbienceModeEnabled) {
+        mutableStateOf(playerPreferences.isAmbienceModeEnabled)
+    }
     val activePlayerPreferences = subtitleStylePreviewPreferences ?: playerPreferences
     val videoFiltersUnavailableMessage = stringResource(coreUiR.string.video_filters_unavailable_software_decoder)
     fun restoreVideoFiltersPreview() {
@@ -391,6 +397,7 @@ internal fun MediaPlayerScreen(
     }
     fun toggleAmbienceMode(shouldShowControls: Boolean = true) {
         isAmbienceModeEnabled = !isAmbienceModeEnabled
+        viewModel.updateAmbienceModeEnabled(isAmbienceModeEnabled)
         if (shouldShowControls) {
             controlsVisibilityState.showControls()
         }
@@ -416,6 +423,27 @@ internal fun MediaPlayerScreen(
         menuRouteStack = menuRouteStack + target
     }
     var longPressOverlayAnimationStep by remember { mutableIntStateOf(0) }
+    var isStatsOverlayVisible by remember { mutableStateOf(false) }
+    var videoDecoderName by remember { mutableStateOf<String?>(null) }
+    var videoFps by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(player, isStatsOverlayVisible) {
+        val mediaController = player as? MediaController
+        if (isStatsOverlayVisible && mediaController != null) {
+            while (true) {
+                try {
+                    val result = mediaController.getVideoFormatDebugInfo()
+                    if (result.resultCode == androidx.media3.session.SessionResult.RESULT_SUCCESS) {
+                        videoDecoderName = result.extras.getString(CustomCommands.VIDEO_DECODER_NAME_KEY)
+                        videoFps = result.extras.getFloat(CustomCommands.VIDEO_FPS_KEY, 0f)
+                    }
+                } catch (e: Exception) {
+                    Logger.error(TAG, "Failed to get video format debug info", e)
+                }
+                delay(1000)
+            }
+        }
+    }
     val keyboardInteractionEnabledState = rememberUpdatedState(
         overlayView == null &&
             menuRouteStack.isEmpty() &&
@@ -993,6 +1021,13 @@ internal fun MediaPlayerScreen(
                                                 onScreenshotClick()
                                             }
                                         },
+                                        onStatsClick = {
+                                            if (isCustomizingControls) {
+                                                toggleControlVisibility(PlayerControl.STATS)
+                                            } else {
+                                                isStatsOverlayVisible = !isStatsOverlayVisible
+                                            }
+                                        },
                                         onPlayInBackgroundClick = {
                                             if (isCustomizingControls) {
                                                 toggleControlVisibility(PlayerControl.BACKGROUND_PLAY)
@@ -1055,6 +1090,8 @@ internal fun MediaPlayerScreen(
                                         onPlaybackSpeedClick = { openOverlayPanel(OverlayView.PLAYBACK_SPEED) },
                                         onSeek = seekGestureState::onSeek,
                                         onSeekEnd = seekGestureState::onSeekEnd,
+                                        videoUri = mediaPresentationState.currentVideoUri,
+                                        useSeekPreviewBubble = playerPreferences.useSeekPreviewBubble,
                                     )
                                 } else {
                                     ControlsBottomView(
@@ -1075,6 +1112,8 @@ internal fun MediaPlayerScreen(
                                         onControlDragMoved = ::moveDraggingControl,
                                         onControlDragCancelled = { clearDraggingControl() },
                                         visiblePlayerControls = visiblePlayerControls,
+                                        videoUri = mediaPresentationState.currentVideoUri,
+                                        useSeekPreview = playerPreferences.useSeekPreviewBubble,
                                         onSeek = seekGestureState::onSeek,
                                         onSeekEnd = seekGestureState::onSeekEnd,
                                         onPlaylistClick = {
@@ -1121,6 +1160,13 @@ internal fun MediaPlayerScreen(
                                                 toggleControlVisibility(PlayerControl.SCREENSHOT)
                                             } else {
                                                 onScreenshotClick()
+                                            }
+                                        },
+                                        onStatsClick = {
+                                            if (isCustomizingControls) {
+                                                toggleControlVisibility(PlayerControl.STATS)
+                                            } else {
+                                                isStatsOverlayVisible = !isStatsOverlayVisible
                                             }
                                         },
                                         onCustomizeControlsClick = {
@@ -1201,6 +1247,15 @@ internal fun MediaPlayerScreen(
                                 }
                             }
                         },
+                    )
+
+                    DeviceStatsOverlay(
+                        visible = isStatsOverlayVisible,
+                        player = player,
+                        videoFps = videoFps,
+                        videoDecoderName = videoDecoderName,
+                        onDismiss = { isStatsOverlayVisible = false },
+                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 72.dp)
                     )
 
                     draggingPlayerControlUiState?.let { draggingState ->

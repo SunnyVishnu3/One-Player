@@ -1,10 +1,13 @@
 package one.only.player.feature.player.ui.controls
 
+import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,6 +107,7 @@ fun ControlsBottomView(
     isTakingScreenshot: Boolean,
     onScreenshotClick: () -> Unit,
     onCustomizeControlsClick: () -> Unit,
+    onStatsClick: () -> Unit = {},
     onLoopClick: (() -> Unit)? = null,
     onShuffleClick: (() -> Unit)? = null,
     onSleepTimerClick: (() -> Unit)? = null,
@@ -118,6 +122,8 @@ fun ControlsBottomView(
     visiblePlayerControls: Set<PlayerControl>,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    videoUri: Uri? = null,
+    useSeekPreview: Boolean = false,
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
@@ -194,6 +200,8 @@ fun ControlsBottomView(
                 onSeek(it.toLong())
             },
             onSeekFinished = { onSeekEnd() },
+            videoUri = videoUri,
+            useSeekPreview = useSeekPreview,
         )
         Row(
             modifier = Modifier
@@ -261,6 +269,7 @@ fun ControlsBottomView(
                             isTakingScreenshot = isTakingScreenshot,
                             onScreenshotClick = onScreenshotClick,
                             onPlayInBackgroundClick = onPlayInBackgroundClick,
+                            onStatsClick = onStatsClick,
                             onLoopClick = onLoopClick,
                             onShuffleClick = onShuffleClick,
                             onSleepTimerClick = onSleepTimerClick,
@@ -296,15 +305,35 @@ private fun PlayerSeekbar(
     duration: Float,
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
+    videoUri: Uri? = null,
+    useSeekPreview: Boolean = false,
 ) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        MaterialYouSlider(
-            modifier = modifier.fillMaxWidth(),
-            value = position,
-            valueRange = 0f..duration,
-            onValueChange = onSeek,
-            onValueChangeFinished = onSeekFinished,
-        )
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isDragged by interactionSource.collectIsDraggedAsState()
+    val isUserInteracting = isPressed || isDragged
+
+    Column(modifier = modifier) {
+        if (useSeekPreview && videoUri != null) {
+            SeekThumbnailPreviewBubble(
+                videoUri = videoUri,
+                position = position,
+                duration = duration,
+                visible = isUserInteracting,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            MaterialYouSlider(
+                modifier = Modifier.fillMaxWidth(),
+                value = position,
+                valueRange = 0f..duration,
+                onValueChange = onSeek,
+                onValueChangeFinished = onSeekFinished,
+                interactionSource = interactionSource,
+            )
+        }
     }
 }
 
@@ -316,9 +345,9 @@ private fun MaterialYouSlider(
     valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
+    interactionSource: MutableInteractionSource,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val interactionSource = remember { MutableInteractionSource() }
     val trackHeight = 8.dp
     val thumbWidth = 4.dp
     val trackThumbGapWidth = 12.dp

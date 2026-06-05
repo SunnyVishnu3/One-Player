@@ -32,8 +32,9 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:model"))
 
+    compileOnly(files("libs/media3ext-release.aar"))
+    compileOnly(files("libs/mediainfo-release.aar"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.github.anilbeesetti.nextlib.mediainfo)
     implementation(libs.coil.compose)
 
     implementation(libs.hilt.android)
