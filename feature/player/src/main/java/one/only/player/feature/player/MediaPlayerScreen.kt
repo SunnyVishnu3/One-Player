@@ -1579,12 +1579,12 @@ internal fun MediaPlayerScreen(
                         }
                     }
 
-                    if (isStatsVisible) {
-                        one.only.player.feature.player.ui.DeviceStatsOverlay(
-                            player = player,
-                            modifier = Modifier.align(Alignment.TopEnd).padding(top = 72.dp, end = 16.dp),
-                        )
-                    }
+                    one.only.player.feature.player.ui.DeviceStatsOverlay(
+                        visible = isStatsVisible,
+                        player = player,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 72.dp, end = 16.dp),
+                        onDismiss = { isStatsVisible = false }
+                    )
                 }
             }
 

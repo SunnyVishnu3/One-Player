@@ -264,5 +264,4 @@ sealed interface PlayerPreferencesUiEvent {
     data class UpdatePlayerIconStyle(val value: PlayerIconStyle) : PlayerPreferencesUiEvent
     data class UpdateControlsStyle(val value: PlayerControlsStyle) : PlayerPreferencesUiEvent
     data class UpdateHiddenPlayerControls(val value: Set<PlayerControl>) : PlayerPreferencesUiEvent
-    data object ToggleDimVideoWhenControlsVisible : PlayerPreferencesUiEvent
 }

@@ -121,6 +121,8 @@ fun ControlsBottomView(
     visiblePlayerControls: Set<PlayerControl>,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    isSeeking: Boolean = false,
+    thumbnailBitmap: android.graphics.Bitmap? = null,
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current

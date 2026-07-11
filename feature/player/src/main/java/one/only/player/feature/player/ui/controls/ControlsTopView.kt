@@ -18,6 +18,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -225,11 +227,11 @@ fun ControlsTopView(
             }
         }
         androidx.compose.material3.IconButton(
-            modifier = Modifier.androidx.compose.ui.platform.testTag("btn_stats"),
+            modifier = Modifier.testTag("btn_stats"),
             onClick = onStatsClick,
         ) {
             Icon(
-                modifier = Modifier.androidx.compose.foundation.layout.size(24.dp),
+                modifier = Modifier.size(24.dp),
                 imageVector = one.only.player.core.ui.designsystem.NextIcons.Info,
                 contentDescription = "Stats",
                 tint = Color.White,
