@@ -28,11 +28,21 @@ data class PlayerPreferences(
     val videoGamma: Float = DEFAULT_VIDEO_GAMMA,
     val isVideoSharpeningFilterEnabled: Boolean = false,
     val videoSharpening: Float = DEFAULT_VIDEO_SHARPENING,
+    val isVideoDebandingFilterEnabled: Boolean = false,
+    val videoDebandingIterations: Int = DEFAULT_VIDEO_DEBANDING_ITERATIONS,
+    val videoDebandingThreshold: Float = DEFAULT_VIDEO_DEBANDING_THRESHOLD,
+    val videoDebandingRange: Float = DEFAULT_VIDEO_DEBANDING_RANGE,
+    val videoDebandingGrain: Float = DEFAULT_VIDEO_DEBANDING_GRAIN,
     val shouldAutoPlay: Boolean = true,
     val shouldPauseAtEndOfQueue: Boolean = false,
     val shouldAutoEnterPip: Boolean = true,
     val shouldAutoPlayInBackground: Boolean = false,
     val loopMode: LoopMode = LoopMode.OFF,
+
+    // Ambient Mode Settings
+    val ambientVisualMode: AmbientVisualMode = AmbientVisualMode.GLOW,
+    val ambientGlowPreset: AmbientGlowPreset = AmbientShaderPresets.glowBalanced,
+    val ambientFrameExtendPreset: AmbientFrameExtendPreset = AmbientShaderPresets.frameExtendBalanced,
 
     // 手势控制
     @Deprecated(message = "Use individual isVolumeSwipeGestureEnabled and isBrightnessSwipeGestureEnabled instead")
@@ -119,6 +129,13 @@ data class PlayerPreferences(
         const val MAX_VIDEO_GAMMA = 3f
         const val DEFAULT_VIDEO_SHARPENING = 0f
         const val DEFAULT_ACTIVE_VIDEO_SHARPENING = 0.5f
+        const val DEFAULT_VIDEO_DEBANDING_ITERATIONS = 1
+        const val DEFAULT_VIDEO_DEBANDING_THRESHOLD = 48f
+        const val MAX_VIDEO_DEBANDING_THRESHOLD = 200f
+        const val DEFAULT_VIDEO_DEBANDING_RANGE = 16f
+        const val MAX_VIDEO_DEBANDING_RANGE = 64f
+        const val DEFAULT_VIDEO_DEBANDING_GRAIN = 32f
+        const val MAX_VIDEO_DEBANDING_GRAIN = 200f
         const val MAX_VIDEO_SHARPENING = 1f
         const val MIN_LONG_PRESS_CONTROLS_SPEED = 0.2f
         const val MAX_LONG_PRESS_CONTROLS_SPEED = 4.0f
@@ -199,6 +216,26 @@ fun PlayerPreferences.withVideoSharpening(value: Float): PlayerPreferences {
         maximumValue = PlayerPreferences.MAX_VIDEO_SHARPENING,
     )
     return copy(videoSharpening = normalizedValue)
+}
+
+fun PlayerPreferences.withVideoDebandingFilterEnabled(isEnabled: Boolean): PlayerPreferences {
+    if (!shouldApplyVideoFilters) return this
+    return copy(isVideoDebandingFilterEnabled = isEnabled)
+}
+
+fun PlayerPreferences.withVideoDebandingSettings(
+    iterations: Int = videoDebandingIterations,
+    threshold: Float = videoDebandingThreshold,
+    range: Float = videoDebandingRange,
+    grain: Float = videoDebandingGrain,
+): PlayerPreferences {
+    if (!shouldApplyVideoFilters) return this
+    return copy(
+        videoDebandingIterations = iterations.coerceIn(0, 16),
+        videoDebandingThreshold = threshold.coerceIn(0f, 4096f),
+        videoDebandingRange = range.coerceIn(1f, 64f),
+        videoDebandingGrain = grain.coerceIn(0f, 4096f),
+    )
 }
 
 fun PlayerPreferences.controllerAutoHideTimeoutSecondsOrNull(): Int? = when (controllerAutoHidePreset) {

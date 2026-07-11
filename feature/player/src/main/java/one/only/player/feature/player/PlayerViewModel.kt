@@ -260,6 +260,12 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun updatePlayerPreferences(preferences: PlayerPreferences) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { preferences }
+        }
+    }
+
     fun onVideoZoomEvent(event: VideoZoomEvent) {
         when (event) {
             is VideoZoomEvent.ContentScaleChanged -> {

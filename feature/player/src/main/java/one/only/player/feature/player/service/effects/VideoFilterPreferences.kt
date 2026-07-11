@@ -16,6 +16,11 @@ data class VideoFilterPreferences(
     val gamma: Float,
     val isSharpeningEnabled: Boolean,
     val sharpening: Float,
+    val isDebandingEnabled: Boolean,
+    val debandingIterations: Int,
+    val debandingThreshold: Float,
+    val debandingRange: Float,
+    val debandingGrain: Float,
 ) {
     fun interpolateTo(
         target: VideoFilterPreferences,
@@ -37,6 +42,11 @@ data class VideoFilterPreferences(
             gamma = gamma.interpolate(target.gamma, fraction),
             isSharpeningEnabled = isSharpeningEnabled || target.isSharpeningEnabled,
             sharpening = sharpening.interpolate(target.sharpening, fraction),
+            isDebandingEnabled = isDebandingEnabled || target.isDebandingEnabled,
+            debandingIterations = target.debandingIterations,
+            debandingThreshold = target.debandingThreshold,
+            debandingRange = target.debandingRange,
+            debandingGrain = target.debandingGrain,
         )
     }
 
@@ -57,6 +67,11 @@ data class VideoFilterPreferences(
             gamma = PlayerPreferences.DEFAULT_VIDEO_GAMMA,
             isSharpeningEnabled = false,
             sharpening = PlayerPreferences.DEFAULT_VIDEO_SHARPENING,
+            isDebandingEnabled = false,
+            debandingIterations = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS,
+            debandingThreshold = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD,
+            debandingRange = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE,
+            debandingGrain = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN,
         )
     }
 }

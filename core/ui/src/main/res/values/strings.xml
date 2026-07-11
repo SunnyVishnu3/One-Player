@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name" translatable="false">Only Player</string>
     <string name="about_description">Version and device info</string>
@@ -61,6 +61,11 @@
     <string name="enable_video_filters">Enable video filters</string>
     <string name="enable_video_filters_description">Turn this off to skip GPU video filtering and save battery</string>
     <string name="video_filters_unavailable_software_decoder">The software decoder does not support video filters</string>
+    <string name="video_debanding">Debanding</string>
+    <string name="video_debanding_iterations">Iterations</string>
+    <string name="video_debanding_threshold">Threshold</string>
+    <string name="video_debanding_range">Range</string>
+    <string name="video_debanding_grain">Grain</string>
     <string name="interface_name">Interface</string>
     <string name="a_z">A-Z</string>
     <string name="z_a">Z-A</string>
@@ -553,4 +558,4 @@
     <string name="add_playback_mark">Add mark</string>
     <string name="no_playback_marks">No marks yet</string>
     <string name="delete_mark">Delete mark</string>
-</resources>
+<string name="ambient_visual_mode">Ambient Visual Mode</string><string name="ambient_glow_preset">Glow Preset</string><string name="ambient_frame_extend_preset">Frame Extend Preset</string></resources>

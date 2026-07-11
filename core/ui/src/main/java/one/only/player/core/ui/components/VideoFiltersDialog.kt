@@ -29,6 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import one.only.player.core.model.PlayerPreferences
+import one.only.player.core.model.withVideoDebandingFilterEnabled
+import one.only.player.core.model.withVideoDebandingSettings
+
 import one.only.player.core.model.withVideoSharpening
 import one.only.player.core.model.withVideoSharpeningFilterEnabled
 import one.only.player.core.ui.R
@@ -205,6 +208,11 @@ private fun VideoFiltersEditor(
                 videoGamma = PlayerPreferences.DEFAULT_VIDEO_GAMMA,
                 isVideoSharpeningFilterEnabled = false,
                 videoSharpening = PlayerPreferences.DEFAULT_VIDEO_SHARPENING,
+                isVideoDebandingFilterEnabled = false,
+                videoDebandingIterations = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS,
+                videoDebandingThreshold = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD,
+                videoDebandingRange = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE,
+                videoDebandingGrain = PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN,
             )
         }
     }
@@ -406,6 +414,70 @@ private fun videoFilterSliderSpecs(
             }
         },
         onValueChange = { onUpdatePreferences { preferences -> preferences.withVideoSharpening(it) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_debanding_iterations),
+        value = preferences.videoDebandingIterations.toFloat(),
+        valueRange = 0f..16f,
+        valueText = "${preferences.videoDebandingIterations}",
+        testTag = "slider_video_debanding_iterations",
+        switchTestTag = "switch_video_debanding_iterations",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoDebandingFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.withVideoDebandingFilterEnabled(!preferences.isVideoDebandingFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.withVideoDebandingSettings(iterations = it.toInt()) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_debanding_threshold),
+        value = preferences.videoDebandingThreshold,
+        valueRange = 0f..PlayerPreferences.MAX_VIDEO_DEBANDING_THRESHOLD,
+        valueText = "${preferences.videoDebandingThreshold.toInt()}",
+        testTag = "slider_video_debanding_threshold",
+        switchTestTag = "switch_video_debanding_threshold",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoDebandingFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.withVideoDebandingFilterEnabled(!preferences.isVideoDebandingFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.withVideoDebandingSettings(threshold = it) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_debanding_range),
+        value = preferences.videoDebandingRange,
+        valueRange = 1f..PlayerPreferences.MAX_VIDEO_DEBANDING_RANGE,
+        valueText = "${preferences.videoDebandingRange.toInt()}",
+        testTag = "slider_video_debanding_range",
+        switchTestTag = "switch_video_debanding_range",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoDebandingFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.withVideoDebandingFilterEnabled(!preferences.isVideoDebandingFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.withVideoDebandingSettings(range = it) } },
+    ),
+    VideoFilterSliderSpec(
+        title = stringResource(R.string.video_debanding_grain),
+        value = preferences.videoDebandingGrain,
+        valueRange = 0f..PlayerPreferences.MAX_VIDEO_DEBANDING_GRAIN,
+        valueText = "${preferences.videoDebandingGrain.toInt()}",
+        testTag = "slider_video_debanding_grain",
+        switchTestTag = "switch_video_debanding_grain",
+        isEnabled = preferences.shouldApplyVideoFilters,
+        isChecked = preferences.isVideoDebandingFilterEnabled,
+        onCheckedChange = {
+            onUpdatePreferences { preferences ->
+                preferences.withVideoDebandingFilterEnabled(!preferences.isVideoDebandingFilterEnabled)
+            }
+        },
+        onValueChange = { onUpdatePreferences { preferences -> preferences.withVideoDebandingSettings(grain = it) } },
     ),
 )
 

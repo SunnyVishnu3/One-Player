@@ -19,6 +19,10 @@ import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.Resume
 import one.only.player.core.model.ScreenOrientation
+import one.only.player.core.model.AmbientVisualMode
+import one.only.player.core.model.AmbientGlowPreset
+import one.only.player.core.model.AmbientFrameExtendPreset
+
 
 @HiltViewModel
 class PlayerPreferencesViewModel @Inject constructor(
@@ -61,6 +65,10 @@ class PlayerPreferencesViewModel @Inject constructor(
             PlayerPreferencesUiEvent.ToggleShowThumbnailPreview -> toggleShowThumbnailPreview()
             PlayerPreferencesUiEvent.TogglePlayerControlLabels -> togglePlayerControlLabels()
             is PlayerPreferencesUiEvent.UpdateHiddenPlayerControls -> updateHiddenPlayerControls(event.value)
+            is PlayerPreferencesUiEvent.UpdateAmbientVisualMode -> updateAmbientVisualMode(event.value)
+            is PlayerPreferencesUiEvent.UpdateAmbientGlowPreset -> updateAmbientGlowPreset(event.value)
+            is PlayerPreferencesUiEvent.UpdateAmbientFrameExtendPreset -> updateAmbientFrameExtendPreset(event.value)
+
         }
     }
 
@@ -221,6 +229,30 @@ class PlayerPreferencesViewModel @Inject constructor(
         }
     }
 
+    private fun updateAmbientVisualMode(value: AmbientVisualMode) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(ambientVisualMode = value)
+            }
+        }
+    }
+
+    private fun updateAmbientGlowPreset(value: AmbientGlowPreset) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(ambientGlowPreset = value)
+            }
+        }
+    }
+
+    private fun updateAmbientFrameExtendPreset(value: AmbientFrameExtendPreset) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(ambientFrameExtendPreset = value)
+            }
+        }
+    }
+
     private fun updateHiddenPlayerControls(value: Set<PlayerControl>) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
@@ -242,6 +274,10 @@ sealed interface PlayerPreferenceDialog {
     data object ControlButtonsDialog : PlayerPreferenceDialog
     data object PlayerIconStyleDialog : PlayerPreferenceDialog
     data object ControlsStyleDialog : PlayerPreferenceDialog
+    data object AmbientVisualModeDialog : PlayerPreferenceDialog
+    data object AmbientGlowPresetDialog : PlayerPreferenceDialog
+    data object AmbientFrameExtendPresetDialog : PlayerPreferenceDialog
+
 }
 
 sealed interface PlayerPreferencesUiEvent {
@@ -264,4 +300,7 @@ sealed interface PlayerPreferencesUiEvent {
     data class UpdatePlayerIconStyle(val value: PlayerIconStyle) : PlayerPreferencesUiEvent
     data class UpdateControlsStyle(val value: PlayerControlsStyle) : PlayerPreferencesUiEvent
     data class UpdateHiddenPlayerControls(val value: Set<PlayerControl>) : PlayerPreferencesUiEvent
+    data class UpdateAmbientVisualMode(val value: AmbientVisualMode) : PlayerPreferencesUiEvent
+    data class UpdateAmbientGlowPreset(val value: AmbientGlowPreset) : PlayerPreferencesUiEvent
+    data class UpdateAmbientFrameExtendPreset(val value: AmbientFrameExtendPreset) : PlayerPreferencesUiEvent
 }

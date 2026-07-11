@@ -26,6 +26,7 @@ object PlayerPreferencesSerializer : Serializer<PlayerPreferences> {
         "isVideoHueFilterEnabled",
         "isVideoGammaFilterEnabled",
         "isVideoSharpeningFilterEnabled",
+        "isVideoDebandingFilterEnabled",
     )
     private val legacyKeys = setOf(
         "applyEmbeddedStyles",
@@ -127,6 +128,12 @@ object PlayerPreferencesSerializer : Serializer<PlayerPreferences> {
                 isVideoSharpeningFilterEnabled = upgradedPreferences.isVideoSharpeningFilterEnabled.takeIf {
                     "isVideoSharpeningFilterEnabled" in root
                 } ?: (upgradedPreferences.videoSharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING),
+                isVideoDebandingFilterEnabled = upgradedPreferences.isVideoDebandingFilterEnabled.takeIf {
+                    "isVideoDebandingFilterEnabled" in root
+                } ?: (upgradedPreferences.videoDebandingIterations != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS ||
+                    upgradedPreferences.videoDebandingThreshold != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD ||
+                    upgradedPreferences.videoDebandingRange != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE ||
+                    upgradedPreferences.videoDebandingGrain != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN),
             )
         }
 
@@ -138,7 +145,11 @@ object PlayerPreferencesSerializer : Serializer<PlayerPreferences> {
         videoSaturation != PlayerPreferences.DEFAULT_VIDEO_SATURATION ||
         videoHue != PlayerPreferences.DEFAULT_VIDEO_HUE ||
         videoGamma != PlayerPreferences.DEFAULT_VIDEO_GAMMA ||
-        videoSharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING
+        videoSharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING ||
+        videoDebandingIterations != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS ||
+        videoDebandingThreshold != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD ||
+        videoDebandingRange != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE ||
+        videoDebandingGrain != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN
 
     private fun String.containsLegacyPlayerPreferences(): Boolean {
         val root = runCatching { jsonFormat.parseToJsonElement(this).jsonObject }.getOrNull() ?: return false

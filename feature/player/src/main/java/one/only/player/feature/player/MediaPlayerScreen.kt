@@ -1221,6 +1221,11 @@ internal fun MediaPlayerScreen(
                                                 toggleAmbienceMode()
                                             }
                                         },
+                                        onAmbienceModeLongClick = {
+                                            if (!isCustomizingControls) {
+                                                openOverlayPanel(OverlayView.AMBIENCE_MODE)
+                                            }
+                                        },
                                         isAmbienceModeEnabled = isAmbienceModeEnabled,
                                         onVideoFiltersClick = {
                                             if (isCustomizingControls) {
@@ -1471,6 +1476,11 @@ internal fun MediaPlayerScreen(
                                                 toggleAmbienceMode()
                                             }
                                         },
+                                        onAmbienceModeLongClick = {
+                                            if (!isCustomizingControls) {
+                                                openOverlayPanel(OverlayView.AMBIENCE_MODE)
+                                            }
+                                        },
                                         isAmbienceModeEnabled = isAmbienceModeEnabled,
                                         onVideoFiltersClick = {
                                             if (isCustomizingControls) {
@@ -1528,6 +1538,7 @@ internal fun MediaPlayerScreen(
                                 onDecoderClick = { },
                                 onAmbienceModeClick = { },
                                 isAmbienceModeEnabled = isAmbienceModeEnabled,
+                                onAmbienceModeLongClick = { },
                                 onVideoFiltersClick = { },
                                 onPictureInPictureClick = { },
                                 onRotateClick = { },
@@ -1673,18 +1684,17 @@ internal fun MediaPlayerScreen(
                             onDismiss = ::dismissOverlay,
                         )
 
-                        MenuRoute.AmbienceMode -> ToggleOptionSelectorContent(
-                            panelTestTag = "panel_ambience_mode",
-                            isEnabled = isAmbienceModeEnabled,
-                            offTestTag = "btn_ambience_mode_off",
-                            onTestTag = "btn_ambience_mode_on",
-                            onEnabledChanged = { isEnabled ->
+                        MenuRoute.AmbienceMode -> one.only.player.feature.player.ui.components.AmbienceModePanel(
+                            modifier = Modifier.fillMaxSize(),
+                            isAmbienceModeEnabled = isAmbienceModeEnabled,
+                            setAmbienceModeEnabled = { isEnabled ->
                                 setAmbienceModeEnabled(
                                     isEnabled = isEnabled,
                                     shouldShowControls = false,
                                 )
                             },
-                            onDismiss = ::dismissOverlay,
+                            preferences = activePlayerPreferences,
+                            onPreferencesChange = viewModel::updatePlayerPreferences,
                         )
 
                         MenuRoute.MirrorVideo -> ToggleOptionSelectorContent(

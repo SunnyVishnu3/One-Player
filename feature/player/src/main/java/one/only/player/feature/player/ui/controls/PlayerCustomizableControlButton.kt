@@ -44,6 +44,7 @@ internal fun PlayerCustomizableControlButton(
     onVideoContentScaleLongClick: () -> Unit,
     onDecoderClick: () -> Unit,
     onAmbienceModeClick: () -> Unit,
+    onAmbienceModeLongClick: () -> Unit,
     isAmbienceModeEnabled: Boolean,
     onVideoFiltersClick: () -> Unit,
     onPictureInPictureClick: () -> Unit,
@@ -224,6 +225,7 @@ internal fun PlayerCustomizableControlButton(
             PlayerButton(
                 modifier = buttonModifier,
                 onClick = onAmbienceModeClick,
+                onLongClick = onAmbienceModeLongClick,
                 isSelected = isSelected,
                 label = label,
                 shouldDimWhenUnselected = isCustomizingControls,

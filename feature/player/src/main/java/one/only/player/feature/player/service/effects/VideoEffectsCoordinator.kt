@@ -27,6 +27,7 @@ internal class VideoEffectsCoordinator(
         decoderPriority = initialDecoderPriority,
     )
     private var activeFilterEffect: VideoFiltersEffect? = null
+    private var activeDebandingEffect: VideoDebandingEffect? = null
     private var activeAmbientEffect: AmbientVideoEffect? = null
     private var isCurrentVideoHdr = false
     private var pendingJob: Job? = null
@@ -66,6 +67,7 @@ internal class VideoEffectsCoordinator(
             ambientTargetAspectRatio = ambientTargetAspectRatio,
         )
         activeFilterEffect = null
+        activeDebandingEffect = null
         activeAmbientEffect = null
         transition = VideoFilterTransition.default()
     }
@@ -178,6 +180,9 @@ internal class VideoEffectsCoordinator(
             decoderPriority = activeDecoderPriority,
             isAmbientEnabled = isAmbientEnabled,
             ambientTargetAspectRatio = normalizedAmbientTargetAspectRatio,
+            ambientVisualMode = currentPreferencesProvider().ambientVisualMode,
+            ambientGlowPreset = currentPreferencesProvider().ambientGlowPreset,
+            ambientFrameExtendPreset = currentPreferencesProvider().ambientFrameExtendPreset,
             isPipelineInitialized = true,
         )
         if (!force && currentState == targetState) return
@@ -221,22 +226,36 @@ internal class VideoEffectsCoordinator(
         decoderPriority: DecoderPriority,
         nextTransition: VideoFilterTransition,
     ) {
+        val prefs = currentPreferencesProvider()
         val filterEffect = activeFilterEffect
         val shouldUseFilterEffect = shouldUseFilterEffect(videoFilters, decoderPriority)
         val shouldUseAmbientEffect = shouldUseAmbientEffect(isAmbientEnabled, decoderPriority)
         val canUpdateActiveFilterEffect = filterEffect != null &&
             shouldUseFilterEffect &&
+            (activeDebandingEffect != null) == shouldUseDebandingEffect(videoFilters, decoderPriority) &&
             (activeAmbientEffect != null) == shouldUseAmbientEffect &&
             currentState.isAmbientEnabled == isAmbientEnabled &&
-            currentState.ambientTargetAspectRatio == ambientTargetAspectRatio
+            currentState.ambientTargetAspectRatio == ambientTargetAspectRatio &&
+            currentState.ambientVisualMode == prefs.ambientVisualMode &&
+            currentState.ambientGlowPreset == prefs.ambientGlowPreset &&
+            currentState.ambientFrameExtendPreset == prefs.ambientFrameExtendPreset
         if (canUpdateActiveFilterEffect) {
             transition = nextTransition
             filterEffect.updateTransition(nextTransition)
+            activeDebandingEffect?.updateSettings(
+                iterations = videoFilters.debandingIterations,
+                threshold = videoFilters.debandingThreshold,
+                range = videoFilters.debandingRange,
+                grain = videoFilters.debandingGrain,
+            )
             currentState = VideoEffectsState(
                 filters = videoFilters,
                 decoderPriority = decoderPriority,
                 isAmbientEnabled = isAmbientEnabled,
                 ambientTargetAspectRatio = ambientTargetAspectRatio,
+                ambientVisualMode = prefs.ambientVisualMode,
+                ambientGlowPreset = prefs.ambientGlowPreset,
+                ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
                 isPipelineInitialized = true,
             )
             refreshPausedFrame(player)
@@ -250,12 +269,15 @@ internal class VideoEffectsCoordinator(
             isAmbientEnabled = isAmbientEnabled,
             ambientTargetAspectRatio = ambientTargetAspectRatio,
         )
-        if (effects.isEmpty() && activeFilterEffect == null && activeAmbientEffect == null) {
+        if (effects.isEmpty() && activeFilterEffect == null && activeDebandingEffect == null && activeAmbientEffect == null) {
             currentState = VideoEffectsState(
                 filters = videoFilters,
                 decoderPriority = decoderPriority,
                 isAmbientEnabled = isAmbientEnabled,
                 ambientTargetAspectRatio = ambientTargetAspectRatio,
+                ambientVisualMode = prefs.ambientVisualMode,
+                ambientGlowPreset = prefs.ambientGlowPreset,
+                ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
                 isPipelineInitialized = false,
             )
             Logger.debug(TAG, "Skip setVideoEffects: no filters and pipeline not initialized")
@@ -268,9 +290,13 @@ internal class VideoEffectsCoordinator(
             decoderPriority = decoderPriority,
             isAmbientEnabled = isAmbientEnabled,
             ambientTargetAspectRatio = ambientTargetAspectRatio,
+            ambientVisualMode = prefs.ambientVisualMode,
+            ambientGlowPreset = prefs.ambientGlowPreset,
+            ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
             isPipelineInitialized = true,
         )
         activeFilterEffect = effects.filterIsInstance<VideoFiltersEffect>().firstOrNull()
+        activeDebandingEffect = effects.filterIsInstance<VideoDebandingEffect>().firstOrNull()
         activeAmbientEffect = effects.filterIsInstance<AmbientVideoEffect>().firstOrNull()
         player.setVideoEffects(effects)
         refreshPausedFrame(player)
@@ -304,8 +330,22 @@ internal class VideoEffectsCoordinator(
                 transitionDurationMs = VIDEO_FILTER_TRANSITION_DURATION_MS,
             )
         }
+        if (shouldUseDebandingEffect(nextTransition.targetFilters, decoderPriority)) {
+            effects += VideoDebandingEffect(
+                iterations = nextTransition.targetFilters.debandingIterations,
+                threshold = nextTransition.targetFilters.debandingThreshold,
+                range = nextTransition.targetFilters.debandingRange,
+                grain = nextTransition.targetFilters.debandingGrain,
+            )
+        }
         if (shouldUseAmbientEffect(isAmbientEnabled, decoderPriority)) {
-            effects += AmbientVideoEffect(targetAspectRatio = ambientTargetAspectRatio)
+            val prefs = currentPreferencesProvider()
+            effects += AmbientVideoEffect(
+                targetAspectRatio = ambientTargetAspectRatio,
+                mode = prefs.ambientVisualMode,
+                glowPreset = prefs.ambientGlowPreset,
+                frameExtendPreset = prefs.ambientFrameExtendPreset,
+            )
         }
         return effects
     }
@@ -315,13 +355,15 @@ internal class VideoEffectsCoordinator(
         decoderPriority: DecoderPriority,
     ): Boolean = shouldApplyVideoEffects(decoderPriority) && filters.shouldCreateEffect()
 
+    private fun shouldUseDebandingEffect(
+        filters: VideoFilterPreferences,
+        decoderPriority: DecoderPriority,
+    ): Boolean = shouldApplyVideoEffects(decoderPriority) && filters.isDebandingEnabled
+
     private fun shouldUseAmbientEffect(
         isEnabled: Boolean,
         decoderPriority: DecoderPriority,
-    ): Boolean {
-        // 氛围背景由 UI 独立绘制，不能改写主视频输出
-        return false
-    }
+    ): Boolean = isEnabled && shouldApplyVideoEffects(decoderPriority)
 
     private fun normalizedAmbientTargetAspectRatio(targetAspectRatio: Float): Float = targetAspectRatio
         .takeIf { it.isFinite() && it > 0f }
@@ -378,6 +420,27 @@ internal fun PlayerPreferences.toVideoFilterPreferences(): VideoFilterPreference
             videoSharpening.coerceIn(PlayerPreferences.DEFAULT_VIDEO_SHARPENING, PlayerPreferences.MAX_VIDEO_SHARPENING)
         } else {
             PlayerPreferences.DEFAULT_VIDEO_SHARPENING
+        },
+        isDebandingEnabled = isVideoDebandingFilterEnabled,
+        debandingIterations = if (isVideoDebandingFilterEnabled) {
+            videoDebandingIterations.coerceIn(0, 16)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS
+        },
+        debandingThreshold = if (isVideoDebandingFilterEnabled) {
+            videoDebandingThreshold.coerceIn(0f, 4096f)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD
+        },
+        debandingRange = if (isVideoDebandingFilterEnabled) {
+            videoDebandingRange.coerceIn(1f, 64f)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE
+        },
+        debandingGrain = if (isVideoDebandingFilterEnabled) {
+            videoDebandingGrain.coerceIn(0f, 4096f)
+        } else {
+            PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN
         },
     )
     return if (filters.shouldCreateEffect()) filters else VideoFilterPreferences.default()
