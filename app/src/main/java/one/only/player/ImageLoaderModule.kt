@@ -14,6 +14,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import okio.FileSystem
 import one.only.player.core.data.repository.PreferencesRepository
+import one.only.player.core.media.ThumbnailStrategy
+import one.only.player.core.media.VideoThumbnailDecoder
 import one.only.player.core.model.ThumbnailGenerationStrategy
 
 @Module

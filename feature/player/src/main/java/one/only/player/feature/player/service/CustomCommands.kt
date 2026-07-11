@@ -62,6 +62,7 @@ enum class CustomCommands(val customAction: String) {
         const val AMBIENCE_TARGET_ASPECT_RATIO_KEY = "ambience_target_aspect_ratio"
         const val VIDEO_DECODER_PRIORITY_KEY = "video_decoder_priority"
         const val VIDEO_DECODER_NAME_KEY = "video_decoder_name"
+        const val VIDEO_FPS_KEY = "video_fps"
         const val VIDEO_WIDTH_KEY = "video_width"
         const val VIDEO_HEIGHT_KEY = "video_height"
         const val VIDEO_COLOR_TRANSFER_KEY = "video_color_transfer"
