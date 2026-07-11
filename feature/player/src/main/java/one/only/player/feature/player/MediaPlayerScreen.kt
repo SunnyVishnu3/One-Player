@@ -453,12 +453,33 @@ internal fun MediaPlayerScreen(
             overlayView = target
         }
     }
+    var videoDecoderName by remember { mutableStateOf<String?>(null) }
+    var videoFps by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(player, isStatsVisible) {
+        val mediaController = player as? androidx.media3.session.MediaController
+        if (isStatsVisible && mediaController != null) {
+            while (true) {
+                try {
+                    val result = mediaController.getVideoFormatDebugInfo()
+                    if (result.resultCode == androidx.media3.session.SessionResult.RESULT_SUCCESS) {
+                        videoDecoderName = result.extras.getString(one.only.player.feature.player.service.CustomCommands.VIDEO_DECODER_NAME_KEY)
+                        videoFps = result.extras.getFloat(one.only.player.feature.player.service.CustomCommands.VIDEO_FPS_KEY, 0f)
+                    }
+                } catch (e: Exception) {
+                    one.only.player.core.common.Logger.error(TAG, "Failed to get video format debug info", e)
+                }
+                kotlinx.coroutines.delay(1000)
+            }
+        }
+    }
+
     val showVideoFilters = {
         if (metadataState.isVideoEffectsAvailable) {
             videoFiltersInitialPreferences = playerPreferences
             openOverlayPanel(OverlayView.VIDEO_FILTERS)
         } else {
-            Toast.makeText(context, videoFiltersUnavailableMessage, Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, videoFiltersUnavailableMessage, android.widget.Toast.LENGTH_SHORT).show()
         }
     }
     fun addPlaybackMark() {
@@ -1583,7 +1604,9 @@ internal fun MediaPlayerScreen(
                         visible = isStatsVisible,
                         player = player,
                         modifier = Modifier.align(Alignment.TopEnd).padding(top = 72.dp, end = 16.dp),
-                        onDismiss = { isStatsVisible = false }
+                        videoFps = videoFps,
+                        videoDecoderName = videoDecoderName,
+                        onDismiss = { isStatsVisible = false },
                     )
                 }
             }

@@ -33,7 +33,11 @@ class VideoThumbnailRetriever(private val context: Context, private val uri: Uri
         if (uri == null) return
         withContext(Dispatchers.IO) {
             try {
-                val bitmap = retriever.getFrameAtTime(timeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                var bitmap = retriever.getFrameAtTime(timeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                if (bitmap == null) {
+                    bitmap = retriever.getFrameAtTime(timeMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST)
+                }
+
                 val scaled = bitmap?.let {
                     val maxWidth = 300
                     if (it.width > maxWidth) {
