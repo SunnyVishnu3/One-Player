@@ -192,16 +192,7 @@ fun BoxScope.OverlayShowView(
         onDismiss = onDismiss,
     )
 
-    ToggleOptionSelectorView(
-        shouldShow = overlayView == OverlayView.AMOLED_THEME,
-        titleRes = R.string.amoled_theme,
-        panelTestTag = "panel_amoled_theme",
-        isEnabled = isAmoledEnabled,
-        offTestTag = "btn_amoled_off",
-        onTestTag = "btn_amoled_on",
-        onEnabledChanged = onAmoledEnabledChanged,
-        onDismiss = onDismiss,
-    )
+
 }
 
 @Composable
@@ -269,5 +260,4 @@ enum class OverlayView {
     AMBIENCE_MODE,
     MIRROR_VIDEO,
     SEEKBAR_STYLE,
-    AMOLED_THEME,
 }

@@ -75,28 +75,28 @@ fun IntroOutroPreferencesScreen(
                 SwitchPreference(
                     title = stringResource(R.string.pref_online_skip_markers_title),
                     summary = stringResource(R.string.pref_online_skip_markers_summary),
-                    checked = uiState.playerPreferences.enableIntroDb,
+                    checked = uiState.preferences.enableIntroDb,
                     onCheckedChange = { viewModel.updateEnableIntroDb(it) },
                 )
 
                 SwitchPreference(
                     title = stringResource(R.string.pref_chapter_detect_title),
                     summary = stringResource(R.string.pref_chapter_detect_summary),
-                    checked = uiState.playerPreferences.detectIntroOutroFromChapters,
+                    checked = uiState.preferences.detectIntroOutroFromChapters,
                     onCheckedChange = { viewModel.updateDetectIntroOutroFromChapters(it) },
                 )
 
                 SwitchPreference(
                     title = stringResource(R.string.pref_auto_skip_intro_title),
                     summary = stringResource(R.string.pref_auto_skip_intro_summary),
-                    checked = uiState.playerPreferences.autoSkipIntro,
+                    checked = uiState.preferences.autoSkipIntro,
                     onCheckedChange = { viewModel.updateAutoSkipIntro(it) },
                 )
 
                 SwitchPreference(
                     title = stringResource(R.string.pref_auto_skip_outro_title),
                     summary = stringResource(R.string.pref_auto_skip_outro_summary),
-                    checked = uiState.playerPreferences.autoSkipOutro,
+                    checked = uiState.preferences.autoSkipOutro,
                     onCheckedChange = { viewModel.updateAutoSkipOutro(it) },
                 )
             }

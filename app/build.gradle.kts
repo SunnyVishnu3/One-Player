@@ -83,6 +83,7 @@ android {
         }
 
         jniLibs {
+            pickFirsts += "lib/**/libmediainfo.so"
             keepDebugSymbols += listOf("**/*.so")
         }
     }
@@ -135,6 +136,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.github.anilbeesetti.nextlib.mediainfo)
+    implementation(files("../libs/mediainfo-lib-v1.0.0-fix.aar"))
     implementation(libs.commons.net)
     implementation(libs.okhttp)
     implementation(libs.smbj)

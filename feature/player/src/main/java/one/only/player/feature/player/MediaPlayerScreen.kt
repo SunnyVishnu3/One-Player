@@ -252,6 +252,7 @@ internal fun MediaPlayerScreen(
         isVolumeBoostEnabled = playerPreferences.isVolumeBoostEnabled,
     )
     player ?: return
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val playbackMarks by viewModel.playbackMarks.collectAsStateWithLifecycle()
     val skipMarkers by viewModel.skipMarkers.collectAsStateWithLifecycle()
     val metadataState = rememberMetadataState(player)

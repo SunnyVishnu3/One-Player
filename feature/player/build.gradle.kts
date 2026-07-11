@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.github.anilbeesetti.nextlib.media3ext)
     implementation(libs.github.anilbeesetti.nextlib.mediainfo)
+    compileOnly(files("../../libs/mediainfo-lib-v1.0.0-fix.aar"))
     implementation(libs.github.peerless2012.ass.media)
 
     implementation(libs.kotlinx.coroutines.android)
