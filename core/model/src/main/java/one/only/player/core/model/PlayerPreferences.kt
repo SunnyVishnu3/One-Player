@@ -41,9 +41,8 @@ data class PlayerPreferences(
 
     // Ambient Mode Settings
     val isAmbientModeEnabled: Boolean = false,
-    val ambientVisualMode: AmbientVisualMode = AmbientVisualMode.GLOW,
-    val ambientGlowPreset: AmbientGlowPreset = AmbientShaderPresets.glowBalanced,
-    val ambientFrameExtendPreset: AmbientFrameExtendPreset = AmbientShaderPresets.frameExtendBalanced,
+    val ambientMode: AmbientMode = AmbientMode.GLOW,
+    val ambientQuality: AmbientQuality = AmbientQuality.BALANCED,
 
     // 手势控制
     @Deprecated(message = "Use individual isVolumeSwipeGestureEnabled and isBrightnessSwipeGestureEnabled instead")

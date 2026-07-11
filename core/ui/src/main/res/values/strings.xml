@@ -558,4 +558,4 @@
     <string name="add_playback_mark">Add mark</string>
     <string name="no_playback_marks">No marks yet</string>
     <string name="delete_mark">Delete mark</string>
-<string name="ambient_visual_mode">Ambient Visual Mode</string><string name="ambient_glow_preset">Glow Preset</string><string name="ambient_frame_extend_preset">Frame Extend Preset</string></resources>
+<string name="ambient_mode">Ambient Mode</string><string name="ambient_quality">Ambient Quality</string></resources>

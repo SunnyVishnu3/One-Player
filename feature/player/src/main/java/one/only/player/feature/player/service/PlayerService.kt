@@ -164,7 +164,6 @@ class PlayerService : MediaSessionService() {
         private const val LOCAL_MAX_BUFFER_MS = 30_000
         private const val LOCAL_BUFFER_FOR_PLAYBACK_MS = 150
         private const val LOCAL_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 150
-        private const val DEFAULT_AMBIENCE_TARGET_ASPECT_RATIO = 16f / 9f
         private val FAST_SEEK_PARAMETERS = SeekParameters.CLOSEST_SYNC
         private val EXACT_SEEK_PARAMETERS = SeekParameters.DEFAULT
         private val REMOTE_SOURCE_URI_SCHEMES = setOf("smb", "ftp")
@@ -229,7 +228,6 @@ class PlayerService : MediaSessionService() {
         currentPreferencesProvider = ::playerPreferences,
         currentPlayerProvider = { mediaSession?.player as? ExoPlayer },
     )
-    private var ambienceTargetAspectRatio = DEFAULT_AMBIENCE_TARGET_ASPECT_RATIO
     private val subtitleTrackSelector = SubtitleTrackSelector { playerPreferences.preferredSubtitleLanguage }
     private val externalSubtitleLoader by lazy {
         ExternalSubtitleLoader(
@@ -1638,11 +1636,7 @@ class PlayerService : MediaSessionService() {
         serviceScope.launch {
             preferencesRepository.playerPreferences
                 .distinctUntilChanged { old, new ->
-                    old.toVideoFilterPreferences() == new.toVideoFilterPreferences() &&
-                        old.ambientVisualMode == new.ambientVisualMode &&
-                        old.ambientGlowPreset == new.ambientGlowPreset &&
-                        old.ambientFrameExtendPreset == new.ambientFrameExtendPreset &&
-                        old.isAmbientModeEnabled == new.isAmbientModeEnabled
+                    old.toVideoFilterPreferences() == new.toVideoFilterPreferences()
                 }
                 .collect(videoEffectsCoordinator::apply)
         }

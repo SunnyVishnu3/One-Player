@@ -27,10 +27,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import one.only.player.core.common.extensions.isPipFeatureSupported
 import one.only.player.core.common.extensions.round
-import one.only.player.core.model.AmbientFrameExtendPreset
-import one.only.player.core.model.AmbientGlowPreset
-import one.only.player.core.model.AmbientShaderPresets
-import one.only.player.core.model.AmbientVisualMode
+import one.only.player.core.model.AmbientMode
+import one.only.player.core.model.AmbientQuality
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.ControllerAutoHidePreset
 import one.only.player.core.model.PlayerControlsStyle
@@ -188,34 +186,22 @@ private fun PlayerPreferencesContent(
                 verticalArrangement = Arrangement.spacedBy(SegmentedItemGap),
             ) {
                 ClickablePreferenceItem(
-                    modifier = Modifier.testTag("item_settings_player_ambient_visual_mode"),
-                    title = stringResource(id = R.string.ambient_visual_mode),
-                    description = uiState.preferences.ambientVisualMode.name,
+                    modifier = Modifier.testTag("item_settings_player_ambient_mode"),
+                    title = stringResource(id = R.string.ambient_mode),
+                    description = uiState.preferences.ambientMode.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                     icon = NextIcons.Background,
-                    onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.AmbientVisualModeDialog)) },
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.AmbientModeDialog)) },
                     isFirstItem = true,
-                    isLastItem = uiState.preferences.ambientVisualMode == AmbientVisualMode.YOUTUBE,
+                    isLastItem = false,
                 )
-                if (uiState.preferences.ambientVisualMode == AmbientVisualMode.GLOW) {
-                    ClickablePreferenceItem(
-                        modifier = Modifier.testTag("item_settings_player_ambient_glow_preset"),
-                        title = stringResource(id = R.string.ambient_glow_preset),
-                        description = uiState.preferences.ambientGlowPreset.presetName(),
-                        icon = NextIcons.Video,
-                        onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.AmbientGlowPresetDialog)) },
-                        isLastItem = true,
-                    )
-                }
-                if (uiState.preferences.ambientVisualMode == AmbientVisualMode.FRAME_EXTEND) {
-                    ClickablePreferenceItem(
-                        modifier = Modifier.testTag("item_settings_player_ambient_frame_extend_preset"),
-                        title = stringResource(id = R.string.ambient_frame_extend_preset),
-                        description = uiState.preferences.ambientFrameExtendPreset.presetName(),
-                        icon = NextIcons.Frame,
-                        onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.AmbientFrameExtendPresetDialog)) },
-                        isLastItem = true,
-                    )
-                }
+                ClickablePreferenceItem(
+                    modifier = Modifier.testTag("item_settings_player_ambient_quality"),
+                    title = stringResource(id = R.string.ambient_quality),
+                    description = uiState.preferences.ambientQuality.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                    icon = NextIcons.Video,
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.AmbientQualityDialog)) },
+                    isLastItem = true,
+                )
             }
 
             ListSectionTitle(text = stringResource(id = R.string.playback_behavior))
@@ -418,18 +404,18 @@ private fun PlayerPreferencesContent(
                     }
                 }
 
-                PlayerPreferenceDialog.AmbientVisualModeDialog -> {
+                PlayerPreferenceDialog.AmbientModeDialog -> {
                     OptionsDialog(
-                        text = stringResource(id = R.string.ambient_visual_mode),
+                        text = stringResource(id = R.string.ambient_mode),
                         onDismissClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(null)) },
                     ) {
-                        items(AmbientVisualMode.entries.toTypedArray()) {
+                        items(AmbientMode.entries.toTypedArray()) {
                             RadioTextButton(
-                                modifier = Modifier.testTag("option_settings_player_ambient_visual_mode_${it.name.lowercase()}"),
-                                text = it.label,
-                                isSelected = it == uiState.preferences.ambientVisualMode,
+                                modifier = Modifier.testTag("option_settings_player_ambient_mode_${it.name.lowercase()}"),
+                                text = it.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                                isSelected = it == uiState.preferences.ambientMode,
                                 onClick = {
-                                    onEvent(PlayerPreferencesUiEvent.UpdateAmbientVisualMode(it))
+                                    onEvent(PlayerPreferencesUiEvent.UpdateAmbientMode(it))
                                     onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
                                 },
                             )
@@ -437,47 +423,18 @@ private fun PlayerPreferencesContent(
                     }
                 }
 
-                PlayerPreferenceDialog.AmbientGlowPresetDialog -> {
+                PlayerPreferenceDialog.AmbientQualityDialog -> {
                     OptionsDialog(
-                        text = stringResource(id = R.string.ambient_glow_preset),
+                        text = stringResource(id = R.string.ambient_quality),
                         onDismissClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(null)) },
                     ) {
-                        val glowPresets = listOf(
-                            AmbientShaderPresets.glowFast,
-                            AmbientShaderPresets.glowBalanced,
-                            AmbientShaderPresets.glowHighQuality,
-                        )
-                        items(glowPresets) {
+                        items(AmbientQuality.entries.toTypedArray()) {
                             RadioTextButton(
-                                modifier = Modifier.testTag("option_settings_player_ambient_glow_preset_${it.hashCode()}"),
-                                text = it.presetName(),
-                                isSelected = it == uiState.preferences.ambientGlowPreset,
+                                modifier = Modifier.testTag("option_settings_player_ambient_quality_${it.name.lowercase()}"),
+                                text = it.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                                isSelected = it == uiState.preferences.ambientQuality,
                                 onClick = {
-                                    onEvent(PlayerPreferencesUiEvent.UpdateAmbientGlowPreset(it))
-                                    onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
-                                },
-                            )
-                        }
-                    }
-                }
-
-                PlayerPreferenceDialog.AmbientFrameExtendPresetDialog -> {
-                    OptionsDialog(
-                        text = stringResource(id = R.string.ambient_frame_extend_preset),
-                        onDismissClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(null)) },
-                    ) {
-                        val frameExtendPresets = listOf(
-                            AmbientShaderPresets.frameExtendFast,
-                            AmbientShaderPresets.frameExtendBalanced,
-                            AmbientShaderPresets.frameExtendHighQuality,
-                        )
-                        items(frameExtendPresets) {
-                            RadioTextButton(
-                                modifier = Modifier.testTag("option_settings_player_ambient_frame_extend_preset_${it.hashCode()}"),
-                                text = it.presetName(),
-                                isSelected = it == uiState.preferences.ambientFrameExtendPreset,
-                                onClick = {
-                                    onEvent(PlayerPreferencesUiEvent.UpdateAmbientFrameExtendPreset(it))
+                                    onEvent(PlayerPreferencesUiEvent.UpdateAmbientQuality(it))
                                     onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
                                 },
                             )
@@ -583,20 +540,4 @@ private fun PlayerPreferencesScreenPreview() {
             onEvent = {},
         )
     }
-}
-
-@Composable
-private fun AmbientGlowPreset.presetName(): String = when (this) {
-    AmbientShaderPresets.glowFast -> "Fast"
-    AmbientShaderPresets.glowBalanced -> "Balanced"
-    AmbientShaderPresets.glowHighQuality -> "High Quality"
-    else -> "Custom"
-}
-
-@Composable
-private fun AmbientFrameExtendPreset.presetName(): String = when (this) {
-    AmbientShaderPresets.frameExtendFast -> "Fast"
-    AmbientShaderPresets.frameExtendBalanced -> "Balanced"
-    AmbientShaderPresets.frameExtendHighQuality -> "High Quality"
-    else -> "Custom"
 }

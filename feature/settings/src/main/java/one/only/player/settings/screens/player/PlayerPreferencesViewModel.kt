@@ -11,9 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import one.only.player.core.common.extensions.round
 import one.only.player.core.data.repository.PreferencesRepository
-import one.only.player.core.model.AmbientFrameExtendPreset
-import one.only.player.core.model.AmbientGlowPreset
-import one.only.player.core.model.AmbientVisualMode
+import one.only.player.core.model.AmbientMode
+import one.only.player.core.model.AmbientQuality
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.ControllerAutoHidePreset
 import one.only.player.core.model.PlayerControl
@@ -64,9 +63,8 @@ class PlayerPreferencesViewModel @Inject constructor(
             PlayerPreferencesUiEvent.ToggleShowThumbnailPreview -> toggleShowThumbnailPreview()
             PlayerPreferencesUiEvent.TogglePlayerControlLabels -> togglePlayerControlLabels()
             is PlayerPreferencesUiEvent.UpdateHiddenPlayerControls -> updateHiddenPlayerControls(event.value)
-            is PlayerPreferencesUiEvent.UpdateAmbientVisualMode -> updateAmbientVisualMode(event.value)
-            is PlayerPreferencesUiEvent.UpdateAmbientGlowPreset -> updateAmbientGlowPreset(event.value)
-            is PlayerPreferencesUiEvent.UpdateAmbientFrameExtendPreset -> updateAmbientFrameExtendPreset(event.value)
+            is PlayerPreferencesUiEvent.UpdateAmbientMode -> updateAmbientMode(event.value)
+            is PlayerPreferencesUiEvent.UpdateAmbientQuality -> updateAmbientQuality(event.value)
         }
     }
 
@@ -227,26 +225,18 @@ class PlayerPreferencesViewModel @Inject constructor(
         }
     }
 
-    private fun updateAmbientVisualMode(value: AmbientVisualMode) {
+    private fun updateAmbientMode(value: AmbientMode) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
-                it.copy(ambientVisualMode = value)
+                it.copy(ambientMode = value)
             }
         }
     }
 
-    private fun updateAmbientGlowPreset(value: AmbientGlowPreset) {
+    private fun updateAmbientQuality(value: AmbientQuality) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
-                it.copy(ambientGlowPreset = value)
-            }
-        }
-    }
-
-    private fun updateAmbientFrameExtendPreset(value: AmbientFrameExtendPreset) {
-        viewModelScope.launch {
-            preferencesRepository.updatePlayerPreferences {
-                it.copy(ambientFrameExtendPreset = value)
+                it.copy(ambientQuality = value)
             }
         }
     }
@@ -272,9 +262,8 @@ sealed interface PlayerPreferenceDialog {
     data object ControlButtonsDialog : PlayerPreferenceDialog
     data object PlayerIconStyleDialog : PlayerPreferenceDialog
     data object ControlsStyleDialog : PlayerPreferenceDialog
-    data object AmbientVisualModeDialog : PlayerPreferenceDialog
-    data object AmbientGlowPresetDialog : PlayerPreferenceDialog
-    data object AmbientFrameExtendPresetDialog : PlayerPreferenceDialog
+    data object AmbientModeDialog : PlayerPreferenceDialog
+    data object AmbientQualityDialog : PlayerPreferenceDialog
 }
 
 sealed interface PlayerPreferencesUiEvent {
@@ -297,7 +286,6 @@ sealed interface PlayerPreferencesUiEvent {
     data class UpdatePlayerIconStyle(val value: PlayerIconStyle) : PlayerPreferencesUiEvent
     data class UpdateControlsStyle(val value: PlayerControlsStyle) : PlayerPreferencesUiEvent
     data class UpdateHiddenPlayerControls(val value: Set<PlayerControl>) : PlayerPreferencesUiEvent
-    data class UpdateAmbientVisualMode(val value: AmbientVisualMode) : PlayerPreferencesUiEvent
-    data class UpdateAmbientGlowPreset(val value: AmbientGlowPreset) : PlayerPreferencesUiEvent
-    data class UpdateAmbientFrameExtendPreset(val value: AmbientFrameExtendPreset) : PlayerPreferencesUiEvent
+    data class UpdateAmbientMode(val value: AmbientMode) : PlayerPreferencesUiEvent
+    data class UpdateAmbientQuality(val value: AmbientQuality) : PlayerPreferencesUiEvent
 }

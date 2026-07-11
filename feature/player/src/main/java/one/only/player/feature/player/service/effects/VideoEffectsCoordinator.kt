@@ -28,7 +28,6 @@ internal class VideoEffectsCoordinator(
     )
     private var activeFilterEffect: VideoFiltersEffect? = null
     private var activeDebandingEffect: VideoDebandingEffect? = null
-    private var activeAmbientEffect: AmbientVideoEffect? = null
     private var isCurrentVideoHdr = false
     private var pendingJob: Job? = null
     private var transition = VideoFilterTransition.default()
@@ -44,7 +43,7 @@ internal class VideoEffectsCoordinator(
         get() = isCurrentVideoHdr
 
     val isEffectActive: Boolean
-        get() = activeFilterEffect != null || activeAmbientEffect != null
+        get() = activeFilterEffect != null || activeDebandingEffect != null
 
     fun setDecoderPriority(decoderPriority: DecoderPriority) {
         activeDecoderPriority = decoderPriority
@@ -58,17 +57,12 @@ internal class VideoEffectsCoordinator(
     }
 
     fun resetPipeline() {
-        val wasAmbientEnabled = currentState.isAmbientEnabled
-        val ambientTargetAspectRatio = currentState.ambientTargetAspectRatio
         currentState = VideoEffectsState(
             filters = VideoFilterPreferences.default(),
             decoderPriority = activeDecoderPriority,
-            isAmbientEnabled = wasAmbientEnabled,
-            ambientTargetAspectRatio = ambientTargetAspectRatio,
         )
         activeFilterEffect = null
         activeDebandingEffect = null
-        activeAmbientEffect = null
         transition = VideoFilterTransition.default()
     }
 
@@ -106,8 +100,6 @@ internal class VideoEffectsCoordinator(
         schedule(
             player = player,
             videoFilters = preferences.toVideoFilterPreferences(),
-            isAmbientEnabled = preferences.isAmbientModeEnabled,
-            ambientTargetAspectRatio = currentState.ambientTargetAspectRatio,
             delayMs = 0L,
             shouldSkipStalePreferences = true,
             logPrefix = "Apply",
@@ -123,31 +115,13 @@ internal class VideoEffectsCoordinator(
         schedule(
             player = player,
             videoFilters = preferences.toVideoFilterPreferences(),
-            isAmbientEnabled = currentState.isAmbientEnabled,
-            ambientTargetAspectRatio = currentState.ambientTargetAspectRatio,
             delayMs = VIDEO_FILTER_PREVIEW_DELAY_MS,
             shouldSkipStalePreferences = false,
             logPrefix = "Preview",
         )
     }
 
-    fun setAmbientMode(
-        player: ExoPlayer?,
-        isEnabled: Boolean,
-        targetAspectRatio: Float,
-    ) {
-        val currentPlayer = player ?: currentPlayer() ?: return
-        schedule(
-            player = currentPlayer,
-            videoFilters = currentPreferencesProvider().toVideoFilterPreferences(),
-            isAmbientEnabled = isEnabled,
-            ambientTargetAspectRatio = normalizedAmbientTargetAspectRatio(targetAspectRatio),
-            delayMs = 0L,
-            shouldSkipStalePreferences = true,
-            logPrefix = "Apply",
-            force = true,
-        )
-    }
+
 
     fun updateAvailability(player: ExoPlayer) {
         val currentMediaItem = player.currentMediaItem ?: return
@@ -166,23 +140,15 @@ internal class VideoEffectsCoordinator(
     private fun schedule(
         player: ExoPlayer,
         videoFilters: VideoFilterPreferences,
-        isAmbientEnabled: Boolean,
-        ambientTargetAspectRatio: Float,
         delayMs: Long,
         shouldSkipStalePreferences: Boolean,
         logPrefix: String,
         force: Boolean = false,
     ) {
         pendingJob?.cancel()
-        val normalizedAmbientTargetAspectRatio = normalizedAmbientTargetAspectRatio(ambientTargetAspectRatio)
         val targetState = VideoEffectsState(
             filters = videoFilters,
             decoderPriority = activeDecoderPriority,
-            isAmbientEnabled = isAmbientEnabled,
-            ambientTargetAspectRatio = normalizedAmbientTargetAspectRatio,
-            ambientVisualMode = currentPreferencesProvider().ambientVisualMode,
-            ambientGlowPreset = currentPreferencesProvider().ambientGlowPreset,
-            ambientFrameExtendPreset = currentPreferencesProvider().ambientFrameExtendPreset,
             isPipelineInitialized = true,
         )
         if (!force && currentState == targetState) return
@@ -205,12 +171,10 @@ internal class VideoEffectsCoordinator(
             applyEffects(
                 player = player,
                 videoFilters = videoFilters,
-                isAmbientEnabled = isAmbientEnabled,
-                ambientTargetAspectRatio = normalizedAmbientTargetAspectRatio,
                 decoderPriority = decoderPriority,
                 nextTransition = nextTransition,
             )
-            Logger.debug(TAG, "$logPrefix video effects: filters=$videoFilters ambient=$isAmbientEnabled effect=$isEffectActive")
+            Logger.debug(TAG, "$logPrefix video effects: filters=$videoFilters effect=$isEffectActive")
         }.also { job ->
             job.invokeOnCompletion {
                 if (pendingJob == job) pendingJob = null
@@ -221,24 +185,15 @@ internal class VideoEffectsCoordinator(
     private fun applyEffects(
         player: ExoPlayer,
         videoFilters: VideoFilterPreferences,
-        isAmbientEnabled: Boolean,
-        ambientTargetAspectRatio: Float,
         decoderPriority: DecoderPriority,
         nextTransition: VideoFilterTransition,
     ) {
         val prefs = currentPreferencesProvider()
         val filterEffect = activeFilterEffect
         val shouldUseFilterEffect = shouldUseFilterEffect(videoFilters, decoderPriority)
-        val shouldUseAmbientEffect = shouldUseAmbientEffect(isAmbientEnabled, decoderPriority)
         val canUpdateActiveFilterEffect = filterEffect != null &&
             shouldUseFilterEffect &&
-            (activeDebandingEffect != null) == shouldUseDebandingEffect(videoFilters, decoderPriority) &&
-            (activeAmbientEffect != null) == shouldUseAmbientEffect &&
-            currentState.isAmbientEnabled == isAmbientEnabled &&
-            currentState.ambientTargetAspectRatio == ambientTargetAspectRatio &&
-            currentState.ambientVisualMode == prefs.ambientVisualMode &&
-            currentState.ambientGlowPreset == prefs.ambientGlowPreset &&
-            currentState.ambientFrameExtendPreset == prefs.ambientFrameExtendPreset
+            (activeDebandingEffect != null) == shouldUseDebandingEffect(videoFilters, decoderPriority)
         if (canUpdateActiveFilterEffect) {
             transition = nextTransition
             filterEffect.updateTransition(nextTransition)
@@ -251,11 +206,6 @@ internal class VideoEffectsCoordinator(
             currentState = VideoEffectsState(
                 filters = videoFilters,
                 decoderPriority = decoderPriority,
-                isAmbientEnabled = isAmbientEnabled,
-                ambientTargetAspectRatio = ambientTargetAspectRatio,
-                ambientVisualMode = prefs.ambientVisualMode,
-                ambientGlowPreset = prefs.ambientGlowPreset,
-                ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
                 isPipelineInitialized = true,
             )
             refreshPausedFrame(player)
@@ -266,18 +216,11 @@ internal class VideoEffectsCoordinator(
         val effects = buildEffects(
             nextTransition = nextTransition,
             decoderPriority = decoderPriority,
-            isAmbientEnabled = isAmbientEnabled,
-            ambientTargetAspectRatio = ambientTargetAspectRatio,
         )
-        if (effects.isEmpty() && activeFilterEffect == null && activeDebandingEffect == null && activeAmbientEffect == null) {
+        if (effects.isEmpty() && activeFilterEffect == null && activeDebandingEffect == null) {
             currentState = VideoEffectsState(
                 filters = videoFilters,
                 decoderPriority = decoderPriority,
-                isAmbientEnabled = isAmbientEnabled,
-                ambientTargetAspectRatio = ambientTargetAspectRatio,
-                ambientVisualMode = prefs.ambientVisualMode,
-                ambientGlowPreset = prefs.ambientGlowPreset,
-                ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
                 isPipelineInitialized = false,
             )
             Logger.debug(TAG, "Skip setVideoEffects: no filters and pipeline not initialized")
@@ -288,16 +231,10 @@ internal class VideoEffectsCoordinator(
         currentState = VideoEffectsState(
             filters = videoFilters,
             decoderPriority = decoderPriority,
-            isAmbientEnabled = isAmbientEnabled,
-            ambientTargetAspectRatio = ambientTargetAspectRatio,
-            ambientVisualMode = prefs.ambientVisualMode,
-            ambientGlowPreset = prefs.ambientGlowPreset,
-            ambientFrameExtendPreset = prefs.ambientFrameExtendPreset,
             isPipelineInitialized = true,
         )
         activeFilterEffect = effects.filterIsInstance<VideoFiltersEffect>().firstOrNull()
         activeDebandingEffect = effects.filterIsInstance<VideoDebandingEffect>().firstOrNull()
-        activeAmbientEffect = effects.filterIsInstance<AmbientVideoEffect>().firstOrNull()
         player.setVideoEffects(effects)
         refreshPausedFrame(player)
         updateAvailability(player)
@@ -320,8 +257,6 @@ internal class VideoEffectsCoordinator(
     private fun buildEffects(
         nextTransition: VideoFilterTransition,
         decoderPriority: DecoderPriority,
-        isAmbientEnabled: Boolean,
-        ambientTargetAspectRatio: Float,
     ): List<Effect> {
         val effects = mutableListOf<Effect>()
         if (shouldUseFilterEffect(nextTransition.targetFilters, decoderPriority)) {
@@ -338,15 +273,6 @@ internal class VideoEffectsCoordinator(
                 grain = nextTransition.targetFilters.debandingGrain,
             )
         }
-        if (shouldUseAmbientEffect(isAmbientEnabled, decoderPriority)) {
-            val prefs = currentPreferencesProvider()
-            effects += AmbientVideoEffect(
-                targetAspectRatio = ambientTargetAspectRatio,
-                mode = prefs.ambientVisualMode,
-                glowPreset = prefs.ambientGlowPreset,
-                frameExtendPreset = prefs.ambientFrameExtendPreset,
-            )
-        }
         return effects
     }
 
@@ -360,15 +286,6 @@ internal class VideoEffectsCoordinator(
         decoderPriority: DecoderPriority,
     ): Boolean = shouldApplyVideoEffects(decoderPriority) && filters.isDebandingEnabled
 
-    private fun shouldUseAmbientEffect(
-        isEnabled: Boolean,
-        decoderPriority: DecoderPriority,
-    ): Boolean = isEnabled && shouldApplyVideoEffects(decoderPriority)
-
-    private fun normalizedAmbientTargetAspectRatio(targetAspectRatio: Float): Float = targetAspectRatio
-        .takeIf { it.isFinite() && it > 0f }
-        ?: DEFAULT_AMBIENT_TARGET_ASPECT_RATIO
-
     private fun currentPlayer(): ExoPlayer? = currentPlayerProvider()
 
     private companion object {
@@ -376,7 +293,6 @@ internal class VideoEffectsCoordinator(
         private const val VIDEO_FILTER_PREVIEW_DELAY_MS = 40L
         private const val VIDEO_FILTER_TRANSITION_DURATION_MS = 160L
         private const val PAUSED_FRAME_REFRESH_OFFSET_MS = 50L
-        private const val DEFAULT_AMBIENT_TARGET_ASPECT_RATIO = 16f / 9f
     }
 }
 
