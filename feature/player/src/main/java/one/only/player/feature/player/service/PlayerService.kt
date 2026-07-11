@@ -229,7 +229,6 @@ class PlayerService : MediaSessionService() {
         currentPreferencesProvider = ::playerPreferences,
         currentPlayerProvider = { mediaSession?.player as? ExoPlayer },
     )
-    private var isAmbienceModeEnabled = false
     private var ambienceTargetAspectRatio = DEFAULT_AMBIENCE_TARGET_ASPECT_RATIO
     private val subtitleTrackSelector = SubtitleTrackSelector { playerPreferences.preferredSubtitleLanguage }
     private val externalSubtitleLoader by lazy {
@@ -809,7 +808,7 @@ class PlayerService : MediaSessionService() {
         failedPlayer.stop()
         failedPlayer.release()
         videoEffectsCoordinator.updateAvailability(retryPlayer)
-        applyAmbienceModeToPlayer(retryPlayer)
+        videoEffectsCoordinator.apply(retryPlayer, playerPreferences)
         return true
     }
 
@@ -850,7 +849,7 @@ class PlayerService : MediaSessionService() {
             currentPlayer.removeAnalyticsListener(startupAnalyticsListener)
             session.player = nextPlayer
             currentPlayer.release()
-            applyAmbienceModeToPlayer(nextPlayer)
+            videoEffectsCoordinator.apply(nextPlayer, playerPreferences)
             return
         }
 
@@ -897,15 +896,7 @@ class PlayerService : MediaSessionService() {
         currentPlayer.stop()
         currentPlayer.release()
         videoEffectsCoordinator.updateAvailability(nextPlayer)
-        applyAmbienceModeToPlayer(nextPlayer)
-    }
-
-    private fun applyAmbienceModeToPlayer(player: ExoPlayer?) {
-        videoEffectsCoordinator.setAmbientMode(
-            player = player,
-            isEnabled = isAmbienceModeEnabled,
-            targetAspectRatio = ambienceTargetAspectRatio,
-        )
+        videoEffectsCoordinator.apply(nextPlayer, playerPreferences)
     }
 
     private fun isHardwareVideoDecoderError(error: PlaybackException): Boolean {
@@ -1494,16 +1485,6 @@ class PlayerService : MediaSessionService() {
                     return@future SessionResult(SessionResult.RESULT_SUCCESS)
                 }
 
-                CustomCommands.SET_AMBIENCE_MODE_ENABLED -> {
-                    isAmbienceModeEnabled = args.getBoolean(CustomCommands.IS_AMBIENCE_MODE_ENABLED_KEY)
-                    val targetAspectRatio = args.getFloat(CustomCommands.AMBIENCE_TARGET_ASPECT_RATIO_KEY, 0f)
-                    ambienceTargetAspectRatio = targetAspectRatio
-                        .takeIf { it.isFinite() && it > 0f }
-                        ?: DEFAULT_AMBIENCE_TARGET_ASPECT_RATIO
-                    applyAmbienceModeToPlayer(mediaSession?.player as? ExoPlayer)
-                    return@future SessionResult(SessionResult.RESULT_SUCCESS)
-                }
-
                 CustomCommands.GET_VIDEO_FORMAT -> {
                     val format = videoEffectsCoordinator.currentFormat
                     return@future SessionResult(
@@ -1656,7 +1637,13 @@ class PlayerService : MediaSessionService() {
         }
         serviceScope.launch {
             preferencesRepository.playerPreferences
-                .distinctUntilChanged { old, new -> old.toVideoFilterPreferences() == new.toVideoFilterPreferences() }
+                .distinctUntilChanged { old, new ->
+                    old.toVideoFilterPreferences() == new.toVideoFilterPreferences() &&
+                        old.ambientVisualMode == new.ambientVisualMode &&
+                        old.ambientGlowPreset == new.ambientGlowPreset &&
+                        old.ambientFrameExtendPreset == new.ambientFrameExtendPreset &&
+                        old.isAmbientModeEnabled == new.isAmbientModeEnabled
+                }
                 .collect(videoEffectsCoordinator::apply)
         }
         serviceScope.launch {

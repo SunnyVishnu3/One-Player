@@ -40,6 +40,7 @@ data class PlayerPreferences(
     val loopMode: LoopMode = LoopMode.OFF,
 
     // Ambient Mode Settings
+    val isAmbientModeEnabled: Boolean = false,
     val ambientVisualMode: AmbientVisualMode = AmbientVisualMode.GLOW,
     val ambientGlowPreset: AmbientGlowPreset = AmbientShaderPresets.glowBalanced,
     val ambientFrameExtendPreset: AmbientFrameExtendPreset = AmbientShaderPresets.frameExtendBalanced,
@@ -188,6 +189,11 @@ fun PlayerPreferences.withVideoFiltersFrom(preferences: PlayerPreferences): Play
     videoGamma = preferences.videoGamma,
     isVideoSharpeningFilterEnabled = preferences.isVideoSharpeningFilterEnabled,
     videoSharpening = preferences.videoSharpening,
+    isVideoDebandingFilterEnabled = preferences.isVideoDebandingFilterEnabled,
+    videoDebandingIterations = preferences.videoDebandingIterations,
+    videoDebandingThreshold = preferences.videoDebandingThreshold,
+    videoDebandingRange = preferences.videoDebandingRange,
+    videoDebandingGrain = preferences.videoDebandingGrain,
 )
 
 fun PlayerPreferences.withVideoFilterAdjustment(

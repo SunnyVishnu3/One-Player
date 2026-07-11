@@ -55,7 +55,7 @@ internal class AmbientVideoEffect(
         ): Size {
             val inputAspectRatio = inputWidth.toFloat() / inputHeight.toFloat()
             val outputAspectRatio = targetAspectRatio.takeIf { it.isFinite() && it > 0f } ?: inputAspectRatio
-            
+
             val outputWidth: Int
             val outputHeight: Int
             if (outputAspectRatio >= inputAspectRatio) {
@@ -80,7 +80,7 @@ internal class AmbientVideoEffect(
                 glProgram?.setFloatsUniform("uTransformationMatrix", identityMatrix)
                 glProgram?.setFloatsUniform("uTexTransformationMatrix", identityMatrix)
             }
-            
+
             glProgram?.setFloatsUniform("HOOKED_size", floatArrayOf(inputWidth.toFloat(), inputHeight.toFloat()))
 
             return Size(outputWidth, outputHeight)
@@ -115,7 +115,7 @@ internal class AmbientVideoEffect(
         private fun createGlProgram(scaleX: Double, scaleY: Double): GlProgram {
             val context = AmbientRenderContext(scaleX, scaleY)
             val shared = AmbientSharedShaderConfig(0f, 0f, 1f)
-            
+
             val spec = when (mode) {
                 AmbientVisualMode.GLOW -> AmbientGlowShaderSpec(
                     context = context,
@@ -125,7 +125,7 @@ internal class AmbientVideoEffect(
                     glowIntensity = glowPreset.glowIntensity,
                     satBoost = glowPreset.satBoost,
                     warmth = glowPreset.warmth,
-                    fadeCurve = glowPreset.fadeCurve
+                    fadeCurve = glowPreset.fadeCurve,
                 )
                 AmbientVisualMode.FRAME_EXTEND -> AmbientFrameExtendShaderSpec(
                     context = context,
@@ -134,11 +134,11 @@ internal class AmbientVideoEffect(
                     extendStrength = frameExtendPreset.extendStrength,
                     detailProtection = frameExtendPreset.detailProtection,
                     glowMix = frameExtendPreset.glowMix,
-                    ditherNoise = frameExtendPreset.ditherNoise
+                    ditherNoise = frameExtendPreset.ditherNoise,
                 )
                 AmbientVisualMode.YOUTUBE -> AmbientYouTubeShaderSpec(
                     context = context,
-                    shared = shared
+                    shared = shared,
                 )
             }
 

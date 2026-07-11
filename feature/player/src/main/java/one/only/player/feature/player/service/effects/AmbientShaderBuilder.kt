@@ -1,66 +1,66 @@
 package one.only.player.feature.player.service.effects
 
-import one.only.player.core.model.*
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import one.only.player.core.model.AmbientFrameExtendPreset
+import one.only.player.core.model.AmbientGlowPreset
 
 data class AmbientRenderContext(
-  val scaleX: Double,
-  val scaleY: Double,
+    val scaleX: Double,
+    val scaleY: Double,
 )
 
 data class AmbientSharedShaderConfig(
-  val bezelDepth: Float,
-  val vignetteStrength: Float,
-  val opacity: Float,
+    val bezelDepth: Float,
+    val vignetteStrength: Float,
+    val opacity: Float,
 )
 
 sealed interface AmbientShaderSpec {
-  val context: AmbientRenderContext
-  val shared: AmbientSharedShaderConfig
+    val context: AmbientRenderContext
+    val shared: AmbientSharedShaderConfig
 }
 
 data class AmbientGlowShaderSpec(
-  override val context: AmbientRenderContext,
-  override val shared: AmbientSharedShaderConfig,
-  val blurSamples: Int,
-  val maxRadius: Float,
-  val glowIntensity: Float,
-  val satBoost: Float,
-  val warmth: Float,
-  val fadeCurve: Float,
+    override val context: AmbientRenderContext,
+    override val shared: AmbientSharedShaderConfig,
+    val blurSamples: Int,
+    val maxRadius: Float,
+    val glowIntensity: Float,
+    val satBoost: Float,
+    val warmth: Float,
+    val fadeCurve: Float,
 ) : AmbientShaderSpec
 
 data class AmbientFrameExtendShaderSpec(
-  override val context: AmbientRenderContext,
-  override val shared: AmbientSharedShaderConfig,
-  val sampleBudget: Int,
-  val extendStrength: Float,
-  val detailProtection: Float,
-  val glowMix: Float,
-  val ditherNoise: Float,
+    override val context: AmbientRenderContext,
+    override val shared: AmbientSharedShaderConfig,
+    val sampleBudget: Int,
+    val extendStrength: Float,
+    val detailProtection: Float,
+    val glowMix: Float,
+    val ditherNoise: Float,
 ) : AmbientShaderSpec
 
 data class AmbientYouTubeShaderSpec(
-  override val context: AmbientRenderContext,
-  override val shared: AmbientSharedShaderConfig,
+    override val context: AmbientRenderContext,
+    override val shared: AmbientSharedShaderConfig,
 ) : AmbientShaderSpec
 
 fun matchesGlowPreset(
-  preset: AmbientGlowPreset,
-  blurSamples: Int,
-  maxRadius: Float,
-  glowIntensity: Float,
-  satBoost: Float,
-  vignetteStrength: Float,
-  warmth: Float,
-  fadeCurve: Float,
-  opacity: Float,
-): Boolean =
-  blurSamples == preset.blurSamples &&
+    preset: AmbientGlowPreset,
+    blurSamples: Int,
+    maxRadius: Float,
+    glowIntensity: Float,
+    satBoost: Float,
+    vignetteStrength: Float,
+    warmth: Float,
+    fadeCurve: Float,
+    opacity: Float,
+): Boolean = blurSamples == preset.blurSamples &&
     closeTo(maxRadius, preset.maxRadius) &&
     closeTo(glowIntensity, preset.glowIntensity) &&
     closeTo(satBoost, preset.satBoost) &&
@@ -70,17 +70,16 @@ fun matchesGlowPreset(
     closeTo(opacity, preset.opacity)
 
 fun matchesFrameExtendPreset(
-  preset: AmbientFrameExtendPreset,
-  sampleBudget: Int,
-  extendStrength: Float,
-  detailProtection: Float,
-  glowMix: Float,
-  ditherNoise: Float,
-  bezelDepth: Float,
-  vignetteStrength: Float,
-  opacity: Float,
-): Boolean =
-  sampleBudget == preset.sampleBudget &&
+    preset: AmbientFrameExtendPreset,
+    sampleBudget: Int,
+    extendStrength: Float,
+    detailProtection: Float,
+    glowMix: Float,
+    ditherNoise: Float,
+    bezelDepth: Float,
+    vignetteStrength: Float,
+    opacity: Float,
+): Boolean = sampleBudget == preset.sampleBudget &&
     closeTo(extendStrength, preset.extendStrength) &&
     closeTo(detailProtection, preset.detailProtection) &&
     closeTo(glowMix, preset.glowMix) &&
@@ -90,49 +89,48 @@ fun matchesFrameExtendPreset(
     closeTo(opacity, preset.opacity)
 
 fun closeTo(
-  left: Float,
-  right: Float,
-  tolerance: Float = 0.01f,
+    left: Float,
+    right: Float,
+    tolerance: Float = 0.01f,
 ): Boolean = kotlin.math.abs(left - right) <= tolerance
 
 private const val GOLDEN_ANGLE = 2.399963229728653
 
 private fun glslFloat(value: Double): String {
-  val normalized = if (abs(value) < 0.0000005) 0.0 else value
-  val formatted = String.format(Locale.US, "%.8f", normalized)
-    .trimEnd('0')
-    .trimEnd('.')
-  return if (formatted.contains('.')) formatted else "$formatted.0"
+    val normalized = if (abs(value) < 0.0000005) 0.0 else value
+    val formatted = String.format(Locale.US, "%.8f", normalized)
+        .trimEnd('0')
+        .trimEnd('.')
+    return if (formatted.contains('.')) formatted else "$formatted.0"
 }
 
 private fun buildSpiralTapTable(
-  name: String,
-  samples: Int,
-  thirdComponent: (radiusNorm: Double, indexNorm: Double) -> Double,
+    name: String,
+    samples: Int,
+    thirdComponent: (radiusNorm: Double, indexNorm: Double) -> Double,
 ): String {
-  val count = samples.coerceAtLeast(1)
-  val taps =
-    (0 until count).joinToString(",\n") { index ->
-      val indexNorm = (index.toDouble() + 0.5) / count.toDouble()
-      val radiusNorm = sqrt(indexNorm)
-      val theta = (index.toDouble() + 0.5) * GOLDEN_ANGLE
-      val x = cos(theta) * radiusNorm
-      val y = sin(theta) * radiusNorm
-      "    vec3(${glslFloat(x)}, ${glslFloat(y)}, ${glslFloat(thirdComponent(radiusNorm, indexNorm))})"
-    }
-  return "const vec3 $name[$count] = vec3[$count](\n$taps\n);"
+    val count = samples.coerceAtLeast(1)
+    val taps =
+        (0 until count).joinToString(",\n") { index ->
+            val indexNorm = (index.toDouble() + 0.5) / count.toDouble()
+            val radiusNorm = sqrt(indexNorm)
+            val theta = (index.toDouble() + 0.5) * GOLDEN_ANGLE
+            val x = cos(theta) * radiusNorm
+            val y = sin(theta) * radiusNorm
+            "    vec3(${glslFloat(x)}, ${glslFloat(y)}, ${glslFloat(thirdComponent(radiusNorm, indexNorm))})"
+        }
+    return "const vec3 $name[$count] = vec3[$count](\n$taps\n);"
 }
 
 object AmbientShaderBuilder {
-  fun build(spec: AmbientShaderSpec): String =
-    when (spec) {
-      is AmbientGlowShaderSpec -> buildGlow(spec)
-      is AmbientFrameExtendShaderSpec -> buildFrameExtend(spec)
-      is AmbientYouTubeShaderSpec -> buildYouTube(spec)
+    fun build(spec: AmbientShaderSpec): String = when (spec) {
+        is AmbientGlowShaderSpec -> buildGlow(spec)
+        is AmbientFrameExtendShaderSpec -> buildFrameExtend(spec)
+        is AmbientYouTubeShaderSpec -> buildYouTube(spec)
     }
 
-  private fun buildYouTube(spec: AmbientYouTubeShaderSpec): String =
-    """
+    private fun buildYouTube(spec: AmbientYouTubeShaderSpec): String =
+        """
 #version 100
 precision highp float;
 uniform sampler2D uTexSampler;
@@ -202,13 +200,12 @@ void main() {
     gl_FragColor = vec4(avg_color, 1.0);
     return;
 }
-    """.trimIndent()
+        """.trimIndent()
 
-  private fun buildGlow(spec: AmbientGlowShaderSpec): String =
-    buildGlowFull(spec)
+    private fun buildGlow(spec: AmbientGlowShaderSpec): String = buildGlowFull(spec)
 
-  private fun buildGlowFull(spec: AmbientGlowShaderSpec): String =
-    """
+    private fun buildGlowFull(spec: AmbientGlowShaderSpec): String =
+        """
 #version 100
 precision highp float;
 uniform sampler2D uTexSampler;
@@ -315,18 +312,17 @@ void main() {
     gl_FragColor = mix(edge_pixel, ambient_out, bezel_alpha);
     return;
 }
-    """.trimIndent()
+        """.trimIndent()
 
-  private fun buildFrameExtend(spec: AmbientFrameExtendShaderSpec): String =
-    buildFrameExtendFull(spec)
+    private fun buildFrameExtend(spec: AmbientFrameExtendShaderSpec): String = buildFrameExtendFull(spec)
 
-  private fun buildFrameExtendFull(spec: AmbientFrameExtendShaderSpec): String {
-    val effectiveBudget = spec.sampleBudget.coerceIn(8, 32)
-    val extendSteps = (effectiveBudget / 5).coerceIn(4, 8)
-    val glowSamples = (effectiveBudget / 3).coerceIn(6, 14)
-    val anchorRadius = if (effectiveBudget >= 28) 2 else 1
-    val orthoRadius = 1
-    return """
+    private fun buildFrameExtendFull(spec: AmbientFrameExtendShaderSpec): String {
+        val effectiveBudget = spec.sampleBudget.coerceIn(8, 32)
+        val extendSteps = (effectiveBudget / 5).coerceIn(4, 8)
+        val glowSamples = (effectiveBudget / 3).coerceIn(6, 14)
+        val anchorRadius = if (effectiveBudget >= 28) 2 else 1
+        val orthoRadius = 1
+        return """
 #version 100
 precision highp float;
 uniform sampler2D uTexSampler;
@@ -549,7 +545,6 @@ void main() {
     vec4 ambient_out = vec4(fill_rgb * OPACITY, 1.0);
     return mix(vec4(edge_rgb, 1.0), ambient_out, bezel_alpha);
 }
-    """.trimIndent()
-  }
+        """.trimIndent()
+    }
 }
-

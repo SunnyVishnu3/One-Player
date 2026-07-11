@@ -1,8 +1,5 @@
 package one.only.player.feature.player.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,18 +14,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import one.only.player.core.model.AmbientFrameExtendPreset
-import one.only.player.core.model.AmbientGlowPreset
-import one.only.player.core.model.AmbientShaderPresets
 import one.only.player.core.model.AmbientVisualMode
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.ui.components.PreferenceSlider
@@ -80,11 +70,11 @@ fun AmbienceModePanel(
                         text = mode.label,
                         isSelected = preferences.ambientVisualMode == mode,
                         onClick = { onPreferencesChange(preferences.copy(ambientVisualMode = mode)) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
-            
+
             HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
 
             if (preferences.ambientVisualMode == AmbientVisualMode.GLOW) {

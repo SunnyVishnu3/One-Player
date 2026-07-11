@@ -106,7 +106,7 @@ internal class VideoEffectsCoordinator(
         schedule(
             player = player,
             videoFilters = preferences.toVideoFilterPreferences(),
-            isAmbientEnabled = currentState.isAmbientEnabled,
+            isAmbientEnabled = preferences.isAmbientModeEnabled,
             ambientTargetAspectRatio = currentState.ambientTargetAspectRatio,
             delayMs = 0L,
             shouldSkipStalePreferences = true,

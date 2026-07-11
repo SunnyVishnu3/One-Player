@@ -27,9 +27,7 @@ internal class VideoDebandingEffect(
         this.grain = grain
     }
 
-    override fun toGlShaderProgram(context: Context, useHdr: Boolean): GlShaderProgram {
-        return VideoDebandingShaderProgram(useHdr)
-    }
+    override fun toGlShaderProgram(context: Context, useHdr: Boolean): GlShaderProgram = VideoDebandingShaderProgram(useHdr)
 
     private inner class VideoDebandingShaderProgram(useHdr: Boolean) : BaseGlShaderProgram(useHdr, 1) {
         private val glProgram = createGlProgram()
@@ -40,7 +38,7 @@ internal class VideoDebandingEffect(
             glProgram.setBufferAttribute(
                 "aFramePosition",
                 GlUtil.getNormalizedCoordinateBounds(),
-                GlUtil.HOMOGENEOUS_COORDINATE_VECTOR_SIZE
+                GlUtil.HOMOGENEOUS_COORDINATE_VECTOR_SIZE,
             )
             glProgram.setFloatsUniform("uTransformationMatrix", identityMatrix)
             glProgram.setFloatsUniform("uTexTransformationMatrix", identityMatrix)
@@ -143,11 +141,11 @@ internal class VideoDebandingEffect(
         override fun drawFrame(inputTexId: Int, presentationTimeUs: Long) {
             try {
                 glProgram.use()
-                
+
                 timeCounter += 0.016f
                 if (timeCounter > 1000f) timeCounter = 0f
                 glProgram.setFloatUniform("uRandom", timeCounter)
-                
+
                 glProgram.setIntUniform("uIterations", iterations)
                 glProgram.setFloatUniform("uThreshold", threshold)
                 glProgram.setFloatUniform("uRange", range)

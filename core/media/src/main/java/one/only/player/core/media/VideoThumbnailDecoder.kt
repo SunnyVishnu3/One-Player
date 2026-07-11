@@ -17,7 +17,6 @@ import coil3.disk.DiskCache
 import coil3.fetch.SourceFetchResult
 import coil3.request.Options
 import coil3.toAndroidUri
-import kotlin.math.abs
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import okio.FileSystem
@@ -155,7 +154,7 @@ class VideoThumbnailDecoder(
             } else {
                 return null
             }
-            
+
             val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
             val durationMs = durationStr?.toLongOrNull() ?: 0L
             val timeUs = when (strategy) {

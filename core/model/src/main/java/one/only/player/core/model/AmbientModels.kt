@@ -107,5 +107,4 @@ object AmbientShaderPresets {
             vignetteStrength = 0.62f,
             opacity = 1.0f,
         )
-
 }

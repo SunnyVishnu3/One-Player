@@ -27,15 +27,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import one.only.player.core.common.extensions.isPipFeatureSupported
 import one.only.player.core.common.extensions.round
+import one.only.player.core.model.AmbientFrameExtendPreset
+import one.only.player.core.model.AmbientGlowPreset
+import one.only.player.core.model.AmbientShaderPresets
+import one.only.player.core.model.AmbientVisualMode
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.ControllerAutoHidePreset
 import one.only.player.core.model.PlayerControlsStyle
 import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
-import one.only.player.core.model.AmbientVisualMode
-import one.only.player.core.model.AmbientGlowPreset
-import one.only.player.core.model.AmbientFrameExtendPreset
-import one.only.player.core.model.AmbientShaderPresets
 import one.only.player.core.model.ScreenOrientation
 import one.only.player.core.ui.R
 import one.only.player.core.ui.components.CancelButton
@@ -445,7 +445,7 @@ private fun PlayerPreferencesContent(
                         val glowPresets = listOf(
                             AmbientShaderPresets.glowFast,
                             AmbientShaderPresets.glowBalanced,
-                            AmbientShaderPresets.glowHighQuality
+                            AmbientShaderPresets.glowHighQuality,
                         )
                         items(glowPresets) {
                             RadioTextButton(
@@ -469,7 +469,7 @@ private fun PlayerPreferencesContent(
                         val frameExtendPresets = listOf(
                             AmbientShaderPresets.frameExtendFast,
                             AmbientShaderPresets.frameExtendBalanced,
-                            AmbientShaderPresets.frameExtendHighQuality
+                            AmbientShaderPresets.frameExtendHighQuality,
                         )
                         items(frameExtendPresets) {
                             RadioTextButton(

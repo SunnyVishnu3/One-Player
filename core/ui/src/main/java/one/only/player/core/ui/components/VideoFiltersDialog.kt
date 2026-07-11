@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.withVideoDebandingFilterEnabled
 import one.only.player.core.model.withVideoDebandingSettings
-
 import one.only.player.core.model.withVideoSharpening
 import one.only.player.core.model.withVideoSharpeningFilterEnabled
 import one.only.player.core.ui.R

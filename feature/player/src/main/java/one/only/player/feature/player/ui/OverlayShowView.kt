@@ -47,6 +47,7 @@ fun BoxScope.OverlayShowView(
     onControlLockChanged: (Boolean) -> Unit = {},
     onMuteChanged: (Boolean) -> Unit = {},
     onAmbienceModeChanged: (Boolean) -> Unit = {},
+    onPreferencesChange: (PlayerPreferences) -> Unit = {},
     onVideoMirroredChanged: (Boolean) -> Unit = {},
 ) {
     Box(
@@ -160,16 +161,15 @@ fun BoxScope.OverlayShowView(
         onDismiss = onDismiss,
     )
 
-    ToggleOptionSelectorView(
-        shouldShow = overlayView == OverlayView.AMBIENCE_MODE,
-        titleRes = R.string.ambience_mode,
-        panelTestTag = "panel_ambience_mode",
-        isEnabled = isAmbienceModeEnabled,
-        offTestTag = "btn_ambience_mode_off",
-        onTestTag = "btn_ambience_mode_on",
-        onEnabledChanged = onAmbienceModeChanged,
-        onDismiss = onDismiss,
-    )
+    if (overlayView == OverlayView.AMBIENCE_MODE) {
+        one.only.player.feature.player.ui.components.AmbienceModePanel(
+            modifier = Modifier.matchParentSize(),
+            isAmbienceModeEnabled = isAmbienceModeEnabled,
+            setAmbienceModeEnabled = onAmbienceModeChanged,
+            preferences = playerPreferences,
+            onPreferencesChange = onPreferencesChange,
+        )
+    }
 
     ToggleOptionSelectorView(
         shouldShow = overlayView == OverlayView.MIRROR_VIDEO,

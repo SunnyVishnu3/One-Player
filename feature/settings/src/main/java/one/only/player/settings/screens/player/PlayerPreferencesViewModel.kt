@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import one.only.player.core.common.extensions.round
 import one.only.player.core.data.repository.PreferencesRepository
+import one.only.player.core.model.AmbientFrameExtendPreset
+import one.only.player.core.model.AmbientGlowPreset
+import one.only.player.core.model.AmbientVisualMode
 import one.only.player.core.model.ControlButtonsPosition
 import one.only.player.core.model.ControllerAutoHidePreset
 import one.only.player.core.model.PlayerControl
@@ -19,10 +22,6 @@ import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.Resume
 import one.only.player.core.model.ScreenOrientation
-import one.only.player.core.model.AmbientVisualMode
-import one.only.player.core.model.AmbientGlowPreset
-import one.only.player.core.model.AmbientFrameExtendPreset
-
 
 @HiltViewModel
 class PlayerPreferencesViewModel @Inject constructor(
@@ -68,7 +67,6 @@ class PlayerPreferencesViewModel @Inject constructor(
             is PlayerPreferencesUiEvent.UpdateAmbientVisualMode -> updateAmbientVisualMode(event.value)
             is PlayerPreferencesUiEvent.UpdateAmbientGlowPreset -> updateAmbientGlowPreset(event.value)
             is PlayerPreferencesUiEvent.UpdateAmbientFrameExtendPreset -> updateAmbientFrameExtendPreset(event.value)
-
         }
     }
 
@@ -277,7 +275,6 @@ sealed interface PlayerPreferenceDialog {
     data object AmbientVisualModeDialog : PlayerPreferenceDialog
     data object AmbientGlowPresetDialog : PlayerPreferenceDialog
     data object AmbientFrameExtendPresetDialog : PlayerPreferenceDialog
-
 }
 
 sealed interface PlayerPreferencesUiEvent {

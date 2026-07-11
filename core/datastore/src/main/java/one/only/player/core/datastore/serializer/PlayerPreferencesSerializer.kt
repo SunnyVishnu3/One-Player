@@ -130,10 +130,12 @@ object PlayerPreferencesSerializer : Serializer<PlayerPreferences> {
                 } ?: (upgradedPreferences.videoSharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING),
                 isVideoDebandingFilterEnabled = upgradedPreferences.isVideoDebandingFilterEnabled.takeIf {
                     "isVideoDebandingFilterEnabled" in root
-                } ?: (upgradedPreferences.videoDebandingIterations != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS ||
-                    upgradedPreferences.videoDebandingThreshold != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD ||
-                    upgradedPreferences.videoDebandingRange != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE ||
-                    upgradedPreferences.videoDebandingGrain != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN),
+                } ?: (
+                    upgradedPreferences.videoDebandingIterations != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_ITERATIONS ||
+                        upgradedPreferences.videoDebandingThreshold != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_THRESHOLD ||
+                        upgradedPreferences.videoDebandingRange != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_RANGE ||
+                        upgradedPreferences.videoDebandingGrain != PlayerPreferences.DEFAULT_VIDEO_DEBANDING_GRAIN
+                    ),
             )
         }
 
