@@ -27,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -123,7 +124,9 @@ fun ControlsBottomView(
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
     isSeeking: Boolean = false,
+    useLegacySeekbar: Boolean = false,
     thumbnailBitmap: android.graphics.Bitmap? = null,
+    skipMarkers: List<one.only.player.core.data.repository.IntroDbSegment> = emptyList(),
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
@@ -201,7 +204,9 @@ fun ControlsBottomView(
             },
             onSeekFinished = { onSeekEnd() },
             isSeeking = isSeeking,
+            useLegacySeekbar = useLegacySeekbar,
             thumbnailBitmap = thumbnailBitmap,
+            skipMarkers = skipMarkers,
         )
         Row(
             modifier = Modifier
@@ -309,8 +314,11 @@ private fun PlayerSeekbar(
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
     isSeeking: Boolean = false,
+    useLegacySeekbar: Boolean = false,
     thumbnailBitmap: android.graphics.Bitmap? = null,
+    skipMarkers: List<one.only.player.core.data.repository.IntroDbSegment> = emptyList(),
 ) {
+    val accentColor = MaterialTheme.colorScheme.primary
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(modifier = modifier.fillMaxWidth()) {
             SeekThumbnailPreviewBubble(
@@ -322,13 +330,29 @@ private fun PlayerSeekbar(
                 isPortrait = true,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-            MaterialYouSlider(
-                modifier = Modifier.fillMaxWidth(),
-                value = position,
-                valueRange = 0f..duration,
-                onValueChange = onSeek,
-                onValueChangeFinished = onSeekFinished,
-            )
+            if (useLegacySeekbar) {
+                androidx.compose.material3.Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = position,
+                    valueRange = 0f..duration,
+                    onValueChange = onSeek,
+                    onValueChangeFinished = onSeekFinished,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        activeTrackColor = accentColor,
+                        inactiveTrackColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.3f),
+                        thumbColor = accentColor,
+                    ),
+                )
+            } else {
+                MaterialYouSlider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = position,
+                    valueRange = 0f..duration,
+                    onValueChange = onSeek,
+                    onValueChangeFinished = onSeekFinished,
+                    skipMarkers = skipMarkers,
+                )
+            }
         }
     }
 }
@@ -341,6 +365,7 @@ private fun MaterialYouSlider(
     valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
+    skipMarkers: List<one.only.player.core.data.repository.IntroDbSegment> = emptyList(),
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val interactionSource = remember { MutableInteractionSource() }
@@ -403,6 +428,27 @@ private fun MaterialYouSlider(
                         startCornerRadius = endCornerRadius,
                         endCornerRadius = insideCornerRadius,
                     )
+                }
+
+                val duration = valueRange.endInclusive
+                if (duration > 0f && skipMarkers.isNotEmpty()) {
+                    skipMarkers.forEach { segment ->
+                        val startMs = segment.normalizedStart * 1000.0
+                        val endMs = segment.normalizedEnd * 1000.0
+                        val startPercent = (startMs / duration).coerceIn(0.0, 1.0).toFloat()
+                        val endPercent = (endMs / duration).coerceIn(0.0, 1.0).toFloat()
+                        if (endPercent > startPercent) {
+                            val startX = size.width * startPercent
+                            val endX = size.width * endPercent
+                            drawRoundedRect(
+                                offset = Offset(x = startX, y = 0f),
+                                size = Size(width = endX - startX, height = size.height),
+                                color = Color(0xFFF44336).copy(alpha = 0.8f), // Red/Accent color
+                                startCornerRadius = if (startPercent == 0f) endCornerRadius else 0f,
+                                endCornerRadius = if (endPercent == 1f) endCornerRadius else 0f,
+                            )
+                        }
+                    }
                 }
             }
         },

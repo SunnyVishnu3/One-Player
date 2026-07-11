@@ -184,6 +184,7 @@ enum class Setting {
     APPEARANCE,
     MEDIA_LIBRARY,
     PLAYER,
+    INTRO_OUTRO,
     GESTURES,
     DECODER,
     AUDIO,
@@ -205,6 +206,7 @@ private enum class SettingSection(
     PLAYBACK(
         rows = listOf(
             SettingRow.PLAYER,
+            SettingRow.INTRO_OUTRO,
             SettingRow.GESTURES,
             SettingRow.DECODER,
             SettingRow.AUDIO,
@@ -284,6 +286,19 @@ internal enum class SettingRow(
             R.string.seek_increment,
             R.string.loop_mode,
             R.string.skip_silence,
+        ),
+    ),
+    INTRO_OUTRO(
+        titleResId = R.string.intro_outro_settings,
+        descriptionResId = R.string.intro_outro_settings_description,
+        icon = NextIcons.SkipNext,
+        setting = Setting.INTRO_OUTRO,
+        subSettingResIds = listOf(
+            R.string.pref_online_skip_markers_title,
+            R.string.pref_marker_provider_title,
+            R.string.pref_chapter_detect_title,
+            R.string.pref_auto_skip_intro_title,
+            R.string.pref_auto_skip_outro_title,
         ),
     ),
     GESTURES(

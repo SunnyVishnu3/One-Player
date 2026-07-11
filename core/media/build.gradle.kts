@@ -34,6 +34,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.github.anilbeesetti.nextlib.mediainfo)
+    implementation(files("../../libs/mediainfo-lib-v1.0.0-fix.aar"))
     implementation(libs.coil.compose)
 
     implementation(libs.hilt.android)

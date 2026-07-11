@@ -79,7 +79,6 @@ import one.only.player.feature.videopicker.composables.NoVideosFound
 import one.only.player.feature.videopicker.composables.QuickSettingsDialog
 import one.only.player.feature.videopicker.composables.RenameDialog
 import one.only.player.feature.videopicker.composables.TextIconToggleButton
-import one.only.player.feature.videopicker.composables.VideoInfoDialog
 import one.only.player.feature.videopicker.navigation.MediaPickerScreenMode
 import one.only.player.feature.videopicker.state.SelectedFolder
 import one.only.player.feature.videopicker.state.SelectedVideo
@@ -662,10 +661,16 @@ internal fun MediaPickerScreen(
     }
 
     showInfoActionFor?.let { video ->
-        VideoInfoDialog(
-            video = video,
-            onDismiss = { showInfoActionFor = null },
-        )
+        val context = androidx.compose.ui.platform.LocalContext.current
+        androidx.compose.runtime.LaunchedEffect(video) {
+            val intent = android.content.Intent().apply {
+                component = android.content.ComponentName(context, "one.only.player.feature.player.ui.mediainfo.MediaInfoActivity")
+                action = android.content.Intent.ACTION_VIEW
+                data = android.net.Uri.parse(video.uriString)
+            }
+            context.startActivity(intent)
+            showInfoActionFor = null
+        }
     }
 
     if (shouldShowMoveProgressDialog && moveProgress != null) {

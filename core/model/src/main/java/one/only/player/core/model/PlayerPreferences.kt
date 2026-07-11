@@ -74,6 +74,8 @@ data class PlayerPreferences(
     val shouldHidePlayerButtonsBackground: Boolean = false,
     val shouldHidePlayerControlLabels: Boolean = false,
     val playerIconStyle: PlayerIconStyle = PlayerIconStyle.TONAL,
+    val useLegacySeekbar: Boolean = false,
+    val seekbarStyle: SeekbarStyle = SeekbarStyle.NORMAL,
 
     // 音频偏好
     val preferredAudioLanguage: String = "",
@@ -104,6 +106,18 @@ data class PlayerPreferences(
 
     // 解码偏好
     val decoderPriority: DecoderPriority = DecoderPriority.AUTOMATIC,
+
+    // 片头片尾跳过 (Intro/Outro)
+    val customSkipDuration: Int = DEFAULT_CUSTOM_SKIP_DURATION,
+    val enableIntroDb: Boolean = true,
+    val introSegmentProvider: IntroSegmentProvider = IntroSegmentProvider.HYBRID,
+    val detectIntroOutroFromChapters: Boolean = true,
+    val autoSkipIntro: Boolean = false,
+    val autoSkipOutro: Boolean = false,
+    val customIntroKeywordsEnabled: Boolean = false,
+    val customIntroKeywords: String = "",
+    val customOutroKeywordsEnabled: Boolean = false,
+    val customOutroKeywords: String = "",
 ) {
 
     companion object {
@@ -160,6 +174,9 @@ data class PlayerPreferences(
         const val MIN_INITIAL_PLAYER_VOLUME_PERCENTAGE = 10
         const val MAX_INITIAL_PLAYER_VOLUME_PERCENTAGE = MAX_PLAYER_VOLUME_PERCENTAGE
         const val MAX_SEEK_INCREMENT = 120
+        const val DEFAULT_CUSTOM_SKIP_DURATION = 90
+        const val MIN_CUSTOM_SKIP_DURATION = 5
+        const val MAX_CUSTOM_SKIP_DURATION = 180
     }
 }
 

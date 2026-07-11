@@ -71,4 +71,17 @@ interface DataModule {
     fun bindsSubtitleFontFileValidator(
         subtitleFontFileValidator: AndroidSubtitleFontFileValidator,
     ): SubtitleFontFileValidator
+
+    companion object {
+        @dagger.Provides
+        @javax.inject.Singleton
+        fun providesOkHttpClient(): okhttp3.OkHttpClient = okhttp3.OkHttpClient.Builder().build()
+
+        @dagger.Provides
+        @javax.inject.Singleton
+        fun providesJson(): kotlinx.serialization.json.Json = kotlinx.serialization.json.Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+    }
 }

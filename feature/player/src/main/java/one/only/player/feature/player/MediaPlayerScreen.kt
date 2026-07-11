@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect as AndroidRect
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -76,8 +75,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -134,7 +133,6 @@ import one.only.player.feature.player.extensions.noRippleClickable
 import one.only.player.feature.player.extensions.seekByRequestedOffset
 import one.only.player.feature.player.extensions.seekToRequestedPosition
 import one.only.player.feature.player.input.PlayerKeyboardController
-import one.only.player.feature.player.service.PlayerService
 import one.only.player.feature.player.service.getVideoFormatDebugInfo
 import one.only.player.feature.player.service.previewVideoFilters
 import one.only.player.feature.player.state.ControlsVisibilityState
@@ -155,8 +153,6 @@ import one.only.player.feature.player.state.rememberVolumeState
 import one.only.player.feature.player.state.seekAmountFormatted
 import one.only.player.feature.player.state.seekToPositionFormated
 import one.only.player.feature.player.thumbnail.rememberVideoThumbnailRetriever
-import one.only.player.feature.player.ui.ambient.AmbientParams
-import one.only.player.feature.player.ui.ambient.AmbientShaderRenderer
 import one.only.player.feature.player.ui.AudioTrackSelectorContent
 import one.only.player.feature.player.ui.DecoderPrioritySelectorContent
 import one.only.player.feature.player.ui.DoubleTapIndicator
@@ -169,6 +165,7 @@ import one.only.player.feature.player.ui.OverlayView
 import one.only.player.feature.player.ui.PlaybackMarksContent
 import one.only.player.feature.player.ui.PlaybackSpeedSelectorContent
 import one.only.player.feature.player.ui.PlaylistContent
+import one.only.player.feature.player.ui.SeekbarStyleSelectorContent
 import one.only.player.feature.player.ui.ShuffleModeSelectorContent
 import one.only.player.feature.player.ui.SleepTimerSelectorContent
 import one.only.player.feature.player.ui.SubtitleConfiguration
@@ -176,6 +173,8 @@ import one.only.player.feature.player.ui.SubtitleSelectorContent
 import one.only.player.feature.player.ui.ToggleOptionSelectorContent
 import one.only.player.feature.player.ui.VerticalProgressView
 import one.only.player.feature.player.ui.VideoContentScaleSelectorContent
+import one.only.player.feature.player.ui.ambient.AmbientParams
+import one.only.player.feature.player.ui.ambient.AmbientShaderRenderer
 import one.only.player.feature.player.ui.controls.ControlsBottomModernView
 import one.only.player.feature.player.ui.controls.ControlsBottomView
 import one.only.player.feature.player.ui.controls.ControlsTopModernView
@@ -254,6 +253,7 @@ internal fun MediaPlayerScreen(
     )
     player ?: return
     val playbackMarks by viewModel.playbackMarks.collectAsStateWithLifecycle()
+    val skipMarkers by viewModel.skipMarkers.collectAsStateWithLifecycle()
     val metadataState = rememberMetadataState(player)
     val mediaPresentationState = rememberMediaPresentationState(player)
     val controlsVisibilityState = rememberControlsVisibilityState(
@@ -454,6 +454,7 @@ internal fun MediaPlayerScreen(
         OverlayView.MUTE -> MenuRoute.Mute
         OverlayView.AMBIENCE_MODE -> MenuRoute.AmbienceMode
         OverlayView.MIRROR_VIDEO -> MenuRoute.MirrorVideo
+        OverlayView.SEEKBAR_STYLE -> MenuRoute.SeekbarStyle
     }
     fun openOverlayPanel(target: OverlayView) {
         controlsVisibilityState.hideControls()
@@ -1335,7 +1336,10 @@ internal fun MediaPlayerScreen(
                                         onSeek = seekGestureState::onSeek,
                                         onSeekEnd = seekGestureState::onSeekEnd,
                                         isSeeking = isSeeking,
+                                        useLegacySeekbar = playerPreferences.useLegacySeekbar,
+                                        seekbarStyle = playerPreferences.seekbarStyle,
                                         thumbnailBitmap = thumbnailBitmap,
+                                        skipMarkers = skipMarkers,
                                     )
                                 } else {
                                     ControlsBottomView(
@@ -1358,6 +1362,10 @@ internal fun MediaPlayerScreen(
                                         visiblePlayerControls = visiblePlayerControls,
                                         onSeek = seekGestureState::onSeek,
                                         onSeekEnd = seekGestureState::onSeekEnd,
+                                        isSeeking = isSeeking,
+                                        useLegacySeekbar = playerPreferences.useLegacySeekbar,
+                                        thumbnailBitmap = thumbnailBitmap,
+                                        skipMarkers = skipMarkers,
                                         onPlaylistClick = {
                                             if (isCustomizingControls) {
                                                 toggleControlVisibility(PlayerControl.PLAYLIST)
@@ -1500,8 +1508,6 @@ internal fun MediaPlayerScreen(
                                                 pictureInPictureState.enterPictureInPictureMode()
                                             }
                                         },
-                                        isSeeking = isSeeking,
-                                        thumbnailBitmap = thumbnailBitmap,
                                     )
                                 }
                             }
@@ -1647,6 +1653,7 @@ internal fun MediaPlayerScreen(
                         MenuRoute.Root -> MenuRootContent(
                             isPipSupported = pictureInPictureState.isPipSupported,
                             isTakingScreenshot = isTakingScreenshot,
+                            isAmoledThemeEnabled = uiState.applicationPreferences.themeConfig == one.only.player.core.model.ThemeConfig.AMOLED,
                             onNavigate = ::navigateToMenuRoute,
                             onPictureInPictureClick = {
                                 if (!pictureInPictureState.hasPipPermission) {
@@ -1664,6 +1671,9 @@ internal fun MediaPlayerScreen(
                             onPlayInBackgroundClick = {
                                 onPlayInBackgroundClick()
                                 dismissOverlay()
+                            },
+                            onAmoledThemeChange = { isAmoled ->
+                                viewModel.updateAmoledTheme(isAmoled)
                             },
                         )
 
@@ -1779,6 +1789,14 @@ internal fun MediaPlayerScreen(
                             player = player,
                             onDismiss = ::dismissOverlay,
                         )
+                        MenuRoute.SeekbarStyle -> SeekbarStyleSelectorContent(
+                            currentSeekbarStyle = playerPreferences.seekbarStyle,
+                            onSeekbarStyleClick = {
+                                viewModel.updateSeekbarStyle(it)
+                                dismissOverlay()
+                            },
+                            onDismiss = ::dismissOverlay,
+                        )
                     }
                 }
             } else {
@@ -1794,6 +1812,10 @@ internal fun MediaPlayerScreen(
                     isAmbienceModeEnabled = isAmbienceModeEnabled,
                     isVideoMirrored = isVideoMirrored,
                     onDismiss = ::dismissOverlay,
+                    onSeekbarStyleChanged = {
+                        viewModel.updateSeekbarStyle(it)
+                        dismissOverlay()
+                    },
                     onSelectSubtitleClick = onSelectSubtitleClick,
                     onAddOnlineSubtitleClick = onAddOnlineSubtitleClick,
                     onSubtitleOptionEvent = viewModel::onSubtitleOptionEvent,
@@ -1901,6 +1923,7 @@ private fun titleForMenuRoute(route: MenuRoute?): String = when (route) {
     MenuRoute.Playlist -> stringResource(coreUiR.string.now_playing)
     MenuRoute.SleepTimer -> stringResource(coreUiR.string.sleep_timer)
     MenuRoute.Decoder -> stringResource(coreUiR.string.decoder_priority)
+    MenuRoute.SeekbarStyle -> stringResource(coreUiR.string.seekbar_style)
     MenuRoute.PlaybackMarks -> stringResource(coreUiR.string.playback_marks)
     MenuRoute.LoopMode -> stringResource(coreUiR.string.loop_mode)
     MenuRoute.ShuffleMode -> stringResource(coreUiR.string.shuffle)
@@ -2128,7 +2151,6 @@ private suspend fun renderAmbientFrame(
     outputWidth: Int,
     outputHeight: Int,
 ): ImageBitmap? {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
     if (outputWidth <= 0 || outputHeight <= 0) return null
 
     val maxDimension = 720f

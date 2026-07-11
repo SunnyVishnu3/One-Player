@@ -35,6 +35,10 @@
     <string name="gestures_description">Configure player touch gestures</string>
     <string name="quick_settings">Quick Settings</string>
     <string name="cloud_quick_settings">Cloud Quick Settings</string>
+    <string name="seekbar_style">Seekbar style</string>
+    <string name="seekbar_style_normal">Normal</string>
+    <string name="seekbar_style_thick">Thick</string>
+    <string name="seekbar_style_wavy">Wavy</string>
     <string name="autoplay_settings">Autoplay</string>
     <string name="autoplay_settings_description">Automatically play the next video in the current folder</string>
     <string name="pip_settings">Picture in Picture Mode</string>
@@ -75,8 +79,9 @@
     <string name="largest">Largest</string>
     <string name="theme_mode">Theme mode</string>
     <string name="follow_system_theme">Follow system</string>
-    <string name="light_theme">Light theme</string>
-    <string name="dark_theme">Dark theme</string>
+    <string name="light_theme">Light</string>
+    <string name="dark_theme">Dark</string>
+    <string name="amoled_theme">AMOLED Dark</string>
     <string name="video_zoom">Video zoom</string>
     <string name="mirror_video">Mirror video</string>
     <string name="dynamic_theme">Dynamic color theme</string>
@@ -209,12 +214,24 @@
     <string name="reset_subtitle_shadow_strength">Reset subtitle shadow strength</string>
     <string name="decoder">Decoder</string>
     <string name="decoder_desc">Decoder priority and video filter options</string>
-    <string name="decoder_priority">Decoder</string>
+    <string name="decoder_priority">Decoder priority</string>
     <string name="auto_hw_decoder">Auto detect (prefer hardware decoding)</string>
     <string name="auto_hw_plus_decoder">Auto detect (prefer hardware decoding+)</string>
     <string name="hw_decoder">Hardware decoding</string>
     <string name="hw_plus_decoder">Hardware decoding+</string>
     <string name="sw_decoder">Software decoding</string>
+    <string name="intro_outro_settings">Intro/Outro &amp; Skip</string>
+    <string name="intro_outro_settings_description">Settings for skipping intro/outro sequences</string>
+    <string name="pref_online_skip_markers_title">Enable IntroDB (Online Skip Markers)</string>
+    <string name="pref_online_skip_markers_summary">Automatically download intro and outro skip markers from the AniSkip database when available.</string>
+    <string name="pref_marker_provider_title">Intro Segment Provider</string>
+    <string name="pref_marker_provider_summary">Choose the priority of skip markers when multiple sources are available.</string>
+    <string name="pref_chapter_detect_title">Detect from Chapters</string>
+    <string name="pref_chapter_detect_summary">Try to detect intro/outro segments from embedded video chapters.</string>
+    <string name="pref_auto_skip_intro_title">Auto-skip Intro</string>
+    <string name="pref_auto_skip_intro_summary">Automatically skip intros when detected without prompting.</string>
+    <string name="pref_auto_skip_outro_title">Auto-skip Outro</string>
+    <string name="pref_auto_skip_outro_summary">Automatically skip outros when detected without prompting.</string>
     <string name="embedded_styles">Embedded styles</string>
     <string name="embedded_styles_desc">Apply the embedded styles that are present in subtitle files, such as ASS and so on</string>
     <string name="controller_timeout">Controller timeout</string>
@@ -228,6 +245,8 @@
     <string name="controller_timeout_description">Controls will be hidden after %1$d milliseconds</string>
     <string name="dim_video_when_controls_visible">Dim video when controls visible</string>
     <string name="dim_video_when_controls_visible_description">When player controls are visible, the video will be slightly dimmed</string>
+    <string name="use_legacy_seekbar">Use Legacy Seekbar</string>
+    <string name="use_legacy_seekbar_description">Use a standard linear slider style instead of the modern style</string>
     <string name="show_thumbnail_preview">Show thumbnail preview</string>
     <string name="show_thumbnail_preview_description">Show thumbnail preview when seeking in video</string>
     <string name="pause_at_end_of_queue">Pause at end of queue</string>
@@ -558,4 +577,7 @@
     <string name="add_playback_mark">Add mark</string>
     <string name="no_playback_marks">No marks yet</string>
     <string name="delete_mark">Delete mark</string>
-<string name="ambient_mode">Ambient Mode</string><string name="ambient_quality">Ambient Quality</string></resources>
+    <string name="ambient_mode">Ambient Mode</string>
+    <string name="ambient_quality">Ambient Quality</string>
+
+</resources>

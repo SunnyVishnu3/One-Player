@@ -297,8 +297,13 @@ open class PlayerActivity : AppCompatActivity() {
                     ThemeConfig.SYSTEM -> isSystemInDarkTheme()
                     ThemeConfig.OFF -> false
                     ThemeConfig.ON -> true
+                    ThemeConfig.AMOLED -> true
                 },
                 shouldUseDynamicColor = uiState.applicationPreferences.shouldUseDynamicColors,
+                seedColor = uiState.applicationPreferences.themeSeedColor,
+                paletteStyle = uiState.applicationPreferences.themePaletteStyle,
+                colorSpec = uiState.applicationPreferences.themeColorSpec,
+                isAmoled = uiState.applicationPreferences.themeConfig == ThemeConfig.AMOLED,
             ) {
                 MediaPlayerScreen(
                     modifier = Modifier.semantics {

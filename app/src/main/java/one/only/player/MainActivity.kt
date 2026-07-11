@@ -203,6 +203,7 @@ class MainActivity : AppCompatActivity() {
                 seedColor = preferences?.themeSeedColor ?: DEFAULT_SEED_COLOR,
                 paletteStyle = preferences?.themePaletteStyle ?: ThemePaletteStyle.TONAL_SPOT,
                 colorSpec = preferences?.themeColorSpec ?: ThemeColorSpec.SPEC_2025,
+                isAmoled = preferences?.themeConfig == ThemeConfig.AMOLED,
             ) {
                 if (!shouldShowStartupSplash) {
                     StartupUpdateDialog(viewModel = viewModel)
@@ -210,7 +211,7 @@ class MainActivity : AppCompatActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MiuixTheme.colorScheme.surface,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.surface,
                 ) {
                     if (shouldShowStartupSplash) {
                         StartupSplashScreen()
@@ -452,12 +453,14 @@ internal fun resolveBootstrapTheme(
     ThemeConfig.SYSTEM -> BootstrapThemeResolution(shouldUseDarkTheme = isSystemDarkTheme)
     ThemeConfig.OFF -> BootstrapThemeResolution(shouldUseDarkTheme = false)
     ThemeConfig.ON -> BootstrapThemeResolution(shouldUseDarkTheme = true)
+    ThemeConfig.AMOLED -> BootstrapThemeResolution(shouldUseDarkTheme = true)
 }
 
 internal fun ThemeConfig.toAppThemeMode(): AppThemeMode = when (this) {
     ThemeConfig.SYSTEM -> AppThemeMode.FOLLOW_SYSTEM
     ThemeConfig.OFF -> AppThemeMode.LIGHT
     ThemeConfig.ON -> AppThemeMode.DARK
+    ThemeConfig.AMOLED -> AppThemeMode.DARK
 }
 
 internal fun readPersistedThemeConfig(dataDir: String): ThemeConfig {
@@ -522,6 +525,7 @@ fun shouldUseDarkTheme(
         ThemeConfig.SYSTEM -> isSystemInDarkTheme()
         ThemeConfig.OFF -> false
         ThemeConfig.ON -> true
+        ThemeConfig.AMOLED -> true
     }
 }
 

@@ -156,6 +156,7 @@ private fun ThemeConfig.toAppThemeMode(): AppThemeMode = when (this) {
     ThemeConfig.SYSTEM -> AppThemeMode.FOLLOW_SYSTEM
     ThemeConfig.OFF -> AppThemeMode.LIGHT
     ThemeConfig.ON -> AppThemeMode.DARK
+    ThemeConfig.AMOLED -> AppThemeMode.DARK
 }
 
 sealed interface AppearancePreferencesEvent {

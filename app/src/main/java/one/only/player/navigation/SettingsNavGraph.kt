@@ -11,6 +11,7 @@ import one.only.player.settings.navigation.decoderPreferencesScreen
 import one.only.player.settings.navigation.folderPreferencesScreen
 import one.only.player.settings.navigation.generalPreferencesScreen
 import one.only.player.settings.navigation.gesturePreferencesScreen
+import one.only.player.settings.navigation.introOutroPreferencesScreen
 import one.only.player.settings.navigation.librariesScreen
 import one.only.player.settings.navigation.logsScreen
 import one.only.player.settings.navigation.mediaLibraryPreferencesScreen
@@ -21,6 +22,7 @@ import one.only.player.settings.navigation.navigateToDecoderPreferences
 import one.only.player.settings.navigation.navigateToFolderPreferencesScreen
 import one.only.player.settings.navigation.navigateToGeneralPreferences
 import one.only.player.settings.navigation.navigateToGesturePreferences
+import one.only.player.settings.navigation.navigateToIntroOutroPreferences
 import one.only.player.settings.navigation.navigateToLibraries
 import one.only.player.settings.navigation.navigateToLogs
 import one.only.player.settings.navigation.navigateToMediaLibraryPreferencesScreen
@@ -52,6 +54,7 @@ fun NavGraphBuilder.settingsNavGraph(
                     Setting.APPEARANCE -> navController.navigateToAppearancePreferences()
                     Setting.MEDIA_LIBRARY -> navController.navigateToMediaLibraryPreferencesScreen()
                     Setting.PLAYER -> navController.navigateToPlayerPreferences()
+                    Setting.INTRO_OUTRO -> navController.navigateToIntroOutroPreferences()
                     Setting.GESTURES -> navController.navigateToGesturePreferences()
                     Setting.DECODER -> navController.navigateToDecoderPreferences()
                     Setting.AUDIO -> navController.navigateToAudioPreferences()
@@ -77,6 +80,9 @@ fun NavGraphBuilder.settingsNavGraph(
             onNavigateUp = navController::navigateUp,
         )
         playerPreferencesScreen(
+            onNavigateUp = navController::navigateUp,
+        )
+        introOutroPreferencesScreen(
             onNavigateUp = navController::navigateUp,
         )
         gesturePreferencesScreen(

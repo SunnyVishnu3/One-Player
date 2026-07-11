@@ -79,7 +79,6 @@ import one.only.player.feature.videopicker.composables.QuickSettingsTarget
 import one.only.player.feature.videopicker.composables.SelectionActionsPopup
 import one.only.player.feature.videopicker.composables.SelectionCheckIndicator
 import one.only.player.feature.videopicker.composables.SelectionMenuAction
-import one.only.player.feature.videopicker.composables.VideoInfoDialog
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -425,10 +424,16 @@ internal fun CloudBrowseScreen(
     }
 
     uiState.infoVideo?.let { video ->
-        VideoInfoDialog(
-            video = video,
-            onDismiss = { onEvent(CloudBrowseEvent.DismissFileInfo) },
-        )
+        val context = androidx.compose.ui.platform.LocalContext.current
+        androidx.compose.runtime.LaunchedEffect(video) {
+            val intent = android.content.Intent().apply {
+                component = android.content.ComponentName(context, "one.only.player.feature.player.ui.mediainfo.MediaInfoActivity")
+                action = android.content.Intent.ACTION_VIEW
+                data = android.net.Uri.parse(video.uriString)
+            }
+            context.startActivity(intent)
+            onEvent(CloudBrowseEvent.DismissFileInfo)
+        }
     }
 
     if (shouldShowQuickSettingsDialog) {

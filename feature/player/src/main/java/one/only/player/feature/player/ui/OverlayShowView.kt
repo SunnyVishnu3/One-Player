@@ -29,6 +29,7 @@ fun BoxScope.OverlayShowView(
     isMuted: Boolean = false,
     isAmbienceModeEnabled: Boolean = false,
     isVideoMirrored: Boolean = false,
+    isAmoledEnabled: Boolean = false,
     onDismiss: () -> Unit = {},
     onSelectSubtitleClick: () -> Unit = {},
     onAddOnlineSubtitleClick: (String) -> Unit = {},
@@ -49,6 +50,8 @@ fun BoxScope.OverlayShowView(
     onAmbienceModeChanged: (Boolean) -> Unit = {},
     onPreferencesChange: (PlayerPreferences) -> Unit = {},
     onVideoMirroredChanged: (Boolean) -> Unit = {},
+    onSeekbarStyleChanged: (one.only.player.core.model.SeekbarStyle) -> Unit = {},
+    onAmoledEnabledChanged: (Boolean) -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -181,6 +184,24 @@ fun BoxScope.OverlayShowView(
         onEnabledChanged = onVideoMirroredChanged,
         onDismiss = onDismiss,
     )
+
+    SeekbarStyleSelectorView(
+        shouldShow = overlayView == OverlayView.SEEKBAR_STYLE,
+        currentSeekbarStyle = playerPreferences.seekbarStyle,
+        onSeekbarStyleClick = onSeekbarStyleChanged,
+        onDismiss = onDismiss,
+    )
+
+    ToggleOptionSelectorView(
+        shouldShow = overlayView == OverlayView.AMOLED_THEME,
+        titleRes = R.string.amoled_theme,
+        panelTestTag = "panel_amoled_theme",
+        isEnabled = isAmoledEnabled,
+        offTestTag = "btn_amoled_off",
+        onTestTag = "btn_amoled_on",
+        onEnabledChanged = onAmoledEnabledChanged,
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
@@ -247,4 +268,6 @@ enum class OverlayView {
     MUTE,
     AMBIENCE_MODE,
     MIRROR_VIDEO,
+    SEEKBAR_STYLE,
+    AMOLED_THEME,
 }

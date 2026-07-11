@@ -4,4 +4,5 @@ enum class ThemeConfig {
     SYSTEM,
     OFF,
     ON,
+    AMOLED,
 }

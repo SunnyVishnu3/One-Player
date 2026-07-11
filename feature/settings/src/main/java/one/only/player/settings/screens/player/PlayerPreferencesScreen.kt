@@ -167,6 +167,17 @@ private fun PlayerPreferencesContent(
                     description = uiState.preferences.controlsStyle.name(),
                     icon = NextIcons.Player,
                     onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.ControlsStyleDialog)) },
+                )
+                ClickablePreferenceItem(
+                    modifier = Modifier.testTag("item_settings_player_seekbar_style"),
+                    title = stringResource(id = R.string.seekbar_style),
+                    description = when (uiState.preferences.seekbarStyle) {
+                        one.only.player.core.model.SeekbarStyle.NORMAL -> stringResource(id = R.string.seekbar_style_normal)
+                        one.only.player.core.model.SeekbarStyle.THICK -> stringResource(id = R.string.seekbar_style_thick)
+                        one.only.player.core.model.SeekbarStyle.WAVY -> stringResource(id = R.string.seekbar_style_wavy)
+                    },
+                    icon = NextIcons.Style,
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(PlayerPreferenceDialog.SeekbarStyleDialog)) },
                     isLastItem = uiState.preferences.controlsStyle != PlayerControlsStyle.LEGACY,
                 )
                 if (uiState.preferences.controlsStyle == PlayerControlsStyle.LEGACY) {
@@ -397,6 +408,30 @@ private fun PlayerPreferencesContent(
                                 isSelected = it == uiState.preferences.controlsStyle,
                                 onClick = {
                                     onEvent(PlayerPreferencesUiEvent.UpdateControlsStyle(it))
+                                    onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
+                                },
+                            )
+                        }
+                    }
+                }
+
+                PlayerPreferenceDialog.SeekbarStyleDialog -> {
+                    val seekbarStyles = listOf(
+                        one.only.player.core.model.SeekbarStyle.NORMAL to stringResource(id = R.string.seekbar_style_normal),
+                        one.only.player.core.model.SeekbarStyle.THICK to stringResource(id = R.string.seekbar_style_thick),
+                        one.only.player.core.model.SeekbarStyle.WAVY to stringResource(id = R.string.seekbar_style_wavy),
+                    )
+                    OptionsDialog(
+                        text = stringResource(id = R.string.seekbar_style),
+                        onDismissClick = { onEvent(PlayerPreferencesUiEvent.ShowDialog(null)) },
+                    ) {
+                        items(seekbarStyles) { (style, name) ->
+                            RadioTextButton(
+                                modifier = Modifier.testTag("option_settings_player_seekbar_style_${style.name.lowercase()}"),
+                                text = name,
+                                isSelected = style == uiState.preferences.seekbarStyle,
+                                onClick = {
+                                    onEvent(PlayerPreferencesUiEvent.UpdateSeekbarStyle(style))
                                     onEvent(PlayerPreferencesUiEvent.ShowDialog(null))
                                 },
                             )

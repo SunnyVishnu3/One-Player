@@ -56,6 +56,8 @@ sealed interface MenuRoute {
     data object VideoContentScale : MenuRoute
     data object VideoFilters : MenuRoute
     data object PlaybackMarks : MenuRoute
+    data object SeekbarStyle : MenuRoute
+    data object AmoledTheme : MenuRoute
 }
 
 @Composable

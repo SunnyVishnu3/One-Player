@@ -27,6 +27,7 @@ fun OnlyPlayerTheme(
     seedColor: Long = DEFAULT_SEED_COLOR,
     paletteStyle: ModelPaletteStyle = ModelPaletteStyle.TONAL_SPOT,
     colorSpec: ModelColorSpec = ModelColorSpec.SPEC_2025,
+    isAmoled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val miuixController = remember(
@@ -55,15 +56,33 @@ fun OnlyPlayerTheme(
         else -> rememberDynamicColorScheme(
             seedColor = Color(seedColor),
             isDark = shouldUseDarkTheme,
-            isAmoled = false,
+            isAmoled = isAmoled,
             style = paletteStyle.toMaterialKolor(),
             specVersion = colorSpec.toMaterialKolorSpec(),
         )
     }
 
+    // MiuixTheme doesn't natively expose an `isAmoled` flag, but we can override MaterialTheme background
+    val finalMaterialScheme = if (isAmoled && shouldUseDarkTheme) {
+        materialScheme.copy(
+            background = Color.Black,
+            surface = Color.Black,
+            surfaceDim = Color.Black,
+            surfaceBright = Color.Black,
+            surfaceVariant = Color.Black,
+            surfaceContainer = Color.Black,
+            surfaceContainerLow = Color.Black,
+            surfaceContainerLowest = Color.Black,
+            surfaceContainerHigh = Color.Black,
+            surfaceContainerHighest = Color.Black,
+        )
+    } else {
+        materialScheme
+    }
+
     MiuixTheme(controller = miuixController) {
         MaterialTheme(
-            colorScheme = materialScheme,
+            colorScheme = finalMaterialScheme,
             typography = Typography,
             content = content,
         )

@@ -62,6 +62,7 @@ class PlayerViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val subtitleFontRepository: SubtitleFontRepository,
     private val getSortedPlaylistUseCase: GetSortedPlaylistUseCase,
+    private val getSkipMarkersUseCase: one.only.player.core.domain.GetSkipMarkersUseCase,
 ) : ViewModel() {
 
     private companion object {
@@ -94,6 +95,9 @@ class PlayerViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList(),
         )
+
+    private val internalSkipMarkers = MutableStateFlow<List<one.only.player.core.data.repository.IntroDbSegment>>(emptyList())
+    val skipMarkers = internalSkipMarkers.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -252,6 +256,22 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun updateSeekbarStyle(style: one.only.player.core.model.SeekbarStyle) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(seekbarStyle = style)
+            }
+        }
+    }
+
+    fun updateAmoledTheme(isAmoled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updateApplicationPreferences {
+                it.copy(themeConfig = if (isAmoled) one.only.player.core.model.ThemeConfig.AMOLED else one.only.player.core.model.ThemeConfig.ON)
+            }
+        }
+    }
+
     fun updatePlayerControlsCustomization(
         hiddenControls: Set<PlayerControl>,
         layout: PlayerControlsLayout,
@@ -310,6 +330,7 @@ class PlayerViewModel @Inject constructor(
         val requestId = ++playbackMarkMediaUriRequestId
         if (mediaItem == null) {
             playbackMarkMediaUri.value = null
+            internalSkipMarkers.value = emptyList()
             return
         }
 
@@ -317,6 +338,25 @@ class PlayerViewModel @Inject constructor(
             val mediaUri = mediaItem.toPlaybackMarkMediaUri()
             if (requestId == playbackMarkMediaUriRequestId) {
                 playbackMarkMediaUri.value = mediaUri
+            }
+
+            val prefs = internalUiState.value.playerPreferences
+            if (prefs?.enableIntroDb == true) {
+                val parsedInfo = one.only.player.core.media.utils.MediaInfoParser.parse(mediaItem.mediaMetadata.title?.toString() ?: mediaItem.mediaId)
+                getSkipMarkersUseCase(
+                    mediaTitle = parsedInfo.title,
+                    season = parsedInfo.season,
+                    episode = parsedInfo.episode,
+                    provider = prefs.introSegmentProvider,
+                ).collect { markers ->
+                    if (requestId == playbackMarkMediaUriRequestId) {
+                        internalSkipMarkers.value = markers
+                    }
+                }
+            } else {
+                if (requestId == playbackMarkMediaUriRequestId) {
+                    internalSkipMarkers.value = emptyList()
+                }
             }
         }
     }

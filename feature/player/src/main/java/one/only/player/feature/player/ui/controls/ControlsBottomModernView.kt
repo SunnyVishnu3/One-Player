@@ -1,5 +1,11 @@
 package one.only.player.feature.player.ui.controls
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -65,7 +71,10 @@ fun ControlsBottomModernView(
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
     isSeeking: Boolean = false,
+    useLegacySeekbar: Boolean = false,
+    seekbarStyle: one.only.player.core.model.SeekbarStyle = one.only.player.core.model.SeekbarStyle.NORMAL,
     thumbnailBitmap: android.graphics.Bitmap? = null,
+    skipMarkers: List<one.only.player.core.data.repository.IntroDbSegment> = emptyList(),
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
@@ -92,7 +101,10 @@ fun ControlsBottomModernView(
             },
             onSeekFinished = { onSeekEnd() },
             isSeeking = isSeeking,
+            useLegacySeekbar = useLegacySeekbar,
+            seekbarStyle = seekbarStyle,
             thumbnailBitmap = thumbnailBitmap,
+            skipMarkers = skipMarkers,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -206,7 +218,10 @@ private fun ModernSeekbar(
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
     isSeeking: Boolean = false,
+    useLegacySeekbar: Boolean = false,
+    seekbarStyle: one.only.player.core.model.SeekbarStyle = one.only.player.core.model.SeekbarStyle.NORMAL,
     thumbnailBitmap: android.graphics.Bitmap? = null,
+    skipMarkers: List<one.only.player.core.data.repository.IntroDbSegment> = emptyList(),
 ) {
     val accentColor = MaterialTheme.colorScheme.primary
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -220,35 +235,111 @@ private fun ModernSeekbar(
                 isPortrait = true,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-            Slider(
-                modifier = Modifier.fillMaxWidth(),
-                value = position.coerceIn(0f, duration.coerceAtLeast(0f)),
-                valueRange = 0f..duration.coerceAtLeast(0f),
-                onValueChange = onSeek,
-                onValueChangeFinished = onSeekFinished,
-                thumb = {
-                    Box(
-                        modifier = Modifier
-                            .size(14.dp)
-                            .border(2.dp, Color.White, CircleShape)
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(accentColor),
-                    )
-                },
-                track = { sliderState ->
-                    SliderDefaults.Track(
-                        sliderState = sliderState,
-                        modifier = Modifier.height(4.dp),
-                        colors = SliderDefaults.colors(
-                            activeTrackColor = accentColor,
-                            inactiveTrackColor = Color.White.copy(alpha = 0.3f),
-                        ),
-                        thumbTrackGapSize = 0.dp,
-                        drawStopIndicator = null,
-                    )
-                },
-            )
+            if (useLegacySeekbar) {
+                Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = position.coerceIn(0f, duration.coerceAtLeast(0f)),
+                    valueRange = 0f..duration.coerceAtLeast(0f),
+                    onValueChange = onSeek,
+                    onValueChangeFinished = onSeekFinished,
+                    colors = SliderDefaults.colors(
+                        activeTrackColor = accentColor,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                        thumbColor = accentColor,
+                    ),
+                )
+            } else {
+                Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = position.coerceIn(0f, duration.coerceAtLeast(0f)),
+                    valueRange = 0f..duration.coerceAtLeast(0f),
+                    onValueChange = onSeek,
+                    onValueChangeFinished = onSeekFinished,
+                    thumb = {
+                        Box(
+                            modifier = Modifier
+                                .size(14.dp)
+                                .border(2.dp, Color.White, CircleShape)
+                                .padding(2.dp)
+                                .clip(CircleShape)
+                                .background(accentColor),
+                        )
+                    },
+                    track = { sliderState ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (seekbarStyle == one.only.player.core.model.SeekbarStyle.WAVY) {
+                                val infiniteTransition = rememberInfiniteTransition(label = "wave_transition")
+                                val phase by infiniteTransition.animateFloat(
+                                    initialValue = 0f,
+                                    targetValue = 2f * kotlin.math.PI.toFloat(),
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(2000, easing = LinearEasing),
+                                        repeatMode = RepeatMode.Restart,
+                                    ),
+                                    label = "wave_phase",
+                                )
+                                androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxWidth().height(24.dp)) {
+                                    val progress = sliderState.value / duration.coerceAtLeast(1f)
+                                    val activeWidth = size.width * progress
+                                    val waveFrequency = 0.05f
+                                    val waveAmplitude = 4.dp.toPx()
+                                    val path = androidx.compose.ui.graphics.Path()
+                                    var x = 0f
+                                    path.moveTo(x, size.height / 2f)
+                                    while (x < activeWidth) {
+                                        val y = (size.height / 2f) + kotlin.math.sin((x * waveFrequency) - phase) * waveAmplitude
+                                        path.lineTo(x, y.toFloat())
+                                        x += 2f
+                                    }
+                                    drawPath(
+                                        path = path,
+                                        color = accentColor,
+                                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                                    )
+                                    drawLine(
+                                        color = Color.White.copy(alpha = 0.3f),
+                                        start = androidx.compose.ui.geometry.Offset(activeWidth, size.height / 2f),
+                                        end = androidx.compose.ui.geometry.Offset(size.width, size.height / 2f),
+                                        strokeWidth = 4.dp.toPx(),
+                                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                    )
+                                }
+                            } else {
+                                val trackHeight = if (seekbarStyle == one.only.player.core.model.SeekbarStyle.THICK) 8.dp else 4.dp
+                                SliderDefaults.Track(
+                                    sliderState = sliderState,
+                                    modifier = Modifier.height(trackHeight),
+                                    colors = SliderDefaults.colors(
+                                        activeTrackColor = accentColor,
+                                        inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                                    ),
+                                    thumbTrackGapSize = 0.dp,
+                                    drawStopIndicator = null,
+                                )
+                            }
+                            if (duration > 0f && skipMarkers.isNotEmpty()) {
+                                androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
+                                    skipMarkers.forEach { segment ->
+                                        val startMs = segment.normalizedStart * 1000.0
+                                        val endMs = segment.normalizedEnd * 1000.0
+                                        val startPercent = (startMs / duration).coerceIn(0.0, 1.0).toFloat()
+                                        val endPercent = (endMs / duration).coerceIn(0.0, 1.0).toFloat()
+                                        if (endPercent > startPercent) {
+                                            val startX = size.width * startPercent
+                                            val endX = size.width * endPercent
+                                            drawRect(
+                                                color = Color(0xFFF44336).copy(alpha = 0.8f), // Red/Accent color for skip markers
+                                                topLeft = androidx.compose.ui.geometry.Offset(x = startX, y = 0f),
+                                                size = androidx.compose.ui.geometry.Size(width = endX - startX, height = size.height),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
 }

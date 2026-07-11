@@ -430,6 +430,7 @@ private fun ThemeConfig.toAppThemeMode(): AppThemeMode = when (this) {
     ThemeConfig.SYSTEM -> AppThemeMode.FOLLOW_SYSTEM
     ThemeConfig.OFF -> AppThemeMode.LIGHT
     ThemeConfig.ON -> AppThemeMode.DARK
+    ThemeConfig.AMOLED -> AppThemeMode.DARK // AMOLED maps to Dark in the system theme manager? Or AppThemeMode might need AMOLED too. Let's see if we should just map to DARK.
 }
 
 private suspend fun DebugCommandEntryPoint.updateApplicationBoolean(

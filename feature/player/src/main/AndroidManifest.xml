@@ -7,6 +7,10 @@
 
     <application android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.mediainfo.MediaInfoActivity"
+            android:exported="true"
+            android:theme="@style/OnlyPlayer" />
+        <activity
             android:name=".PlayerActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|uiMode|keyboard|keyboardHidden|navigation"
             android:exported="true"

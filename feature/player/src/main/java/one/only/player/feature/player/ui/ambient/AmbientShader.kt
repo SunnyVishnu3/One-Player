@@ -1,4 +1,4 @@
-package one.only.player.feature.player.ui.ambient
+﻿package one.only.player.feature.player.ui.ambient
 
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
@@ -7,7 +7,6 @@ import android.graphics.Paint
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.os.Build
-import androidx.annotation.RequiresApi
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -130,7 +129,7 @@ internal data class AmbientParams(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@android.annotation.SuppressLint("NewApi")
 internal object AmbientShaderRenderer {
 
     val isSupported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
@@ -146,6 +145,8 @@ internal object AmbientShaderRenderer {
         outputWidth: Int,
         outputHeight: Int,
     ): Bitmap? {
+        // API 33 以下无 RuntimeShader，直接返回 null 交由上层回退模糊，避免触碰着色器类
+        if (!isSupported) return null
         if (outputWidth <= 0 || outputHeight <= 0) return null
         if (frame.width <= 0 || frame.height <= 0) return null
 
@@ -233,7 +234,7 @@ internal object AmbientShaderRenderer {
         uniform float uOpacity;
         uniform float uBezel;
 
-        half3 sampleFrame(float2 uv) {
+        float3 sampleFrame(float2 uv) {
             float2 c = clamp(uv, float2(0.0), float2(1.0)) * uFrameSize;
             return content.eval(c).rgb;
         }
@@ -242,8 +243,8 @@ internal object AmbientShaderRenderer {
             return fract(sin(dot(seed, float2(12.9898, 78.233))) * 43758.5453);
         }
 
-        float luma(half3 rgb) {
-            return float(dot(rgb, half3(0.2126, 0.7152, 0.0722)));
+        float luma(float3 rgb) {
+            return float(dot(rgb, float3(0.2126, 0.7152, 0.0722)));
         }
     """
 
@@ -262,22 +263,22 @@ internal object AmbientShaderRenderer {
 $taps
             );
 
-            half3 adjustSaturation(half3 rgb, float amount) {
-                return mix(half3(luma(rgb)), rgb, half(amount));
+            float3 adjustSaturation(float3 rgb, float amount) {
+                return mix(float3(luma(rgb)), rgb, float(amount));
             }
 
-            half3 applyWarmth(half3 rgb, float amount) {
-                rgb.r = clamp(rgb.r + half(amount * 0.060), half(0.0), half(1.0));
-                rgb.g = clamp(rgb.g + half(amount * 0.025), half(0.0), half(1.0));
-                rgb.b = clamp(rgb.b - half(amount * 0.080), half(0.0), half(1.0));
+            float3 applyWarmth(float3 rgb, float amount) {
+                rgb.r = clamp(rgb.r + float(amount * 0.060), float(0.0), float(1.0));
+                rgb.g = clamp(rgb.g + float(amount * 0.025), float(0.0), float(1.0));
+                rgb.b = clamp(rgb.b - float(amount * 0.080), float(0.0), float(1.0));
                 return rgb;
             }
 
-            half4 main(float2 fragCoord) {
+            float4 main(float2 fragCoord) {
                 float2 uv = fragCoord / iResolution;
                 float2 videoUv = (uv - 0.5) * uScale + 0.5;
                 if (videoUv.x >= 0.0 && videoUv.x <= 1.0 && videoUv.y >= 0.0 && videoUv.y <= 1.0) {
-                    return half4(sampleFrame(videoUv), 1.0);
+                    return float4(sampleFrame(videoUv), 1.0);
                 }
 
                 float2 edgeOrigin = clamp(videoUv, float2(0.0), float2(1.0));
@@ -289,7 +290,7 @@ $taps
                 float jc = cos(jitter);
                 float2 aspectFix = float2(iResolution.y / iResolution.x, 1.0);
 
-                half3 accColor = half3(0.0);
+                float3 accColor = float3(0.0);
                 float accWeight = 0.0;
                 for (int i = 0; i < BLUR_SAMPLES; i++) {
                     float3 tap = GLOW_TAPS[i];
@@ -300,23 +301,23 @@ $taps
                         baseOffset.x * js + baseOffset.y * jc
                     ) * aspectFix;
                     float2 sampleUv = clamp(edgeOrigin + offset, float2(0.0), float2(1.0));
-                    half3 sampleRgb = sampleFrame(sampleUv);
+                    float3 sampleRgb = sampleFrame(sampleUv);
                     float distW = pow(max(1.0 / (1.0 + r * 40.0), 0.0), uFadeCurve);
                     float lumaW = 1.0 + luma(sampleRgb) * 2.0;
                     float weight = distW * lumaW;
-                    accColor += sampleRgb * half(weight);
+                    accColor += sampleRgb * float(weight);
                     accWeight += weight;
                 }
 
-                half3 glow = (accColor / half(max(accWeight, 1e-5))) * half(uGlowIntensity);
+                float3 glow = (accColor / float(max(accWeight, 1e-5))) * float(uGlowIntensity);
                 glow = adjustSaturation(glow, uSatBoost);
                 glow = applyWarmth(glow, uWarmth);
-                glow *= half(edgeFade);
+                glow *= float(edgeFade);
 
                 float vigR = length(uv - 0.5) * 2.0;
-                glow *= half(mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette));
+                glow *= float(mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette));
 
-                return half4(glow * half(uOpacity), half(1.0));
+                return float4(glow * float(uOpacity), float(1.0));
             }
         """.trimIndent()
     }
@@ -324,14 +325,14 @@ $taps
     private fun youtubeSource(): String = """
         $COMMON_HEADER
 
-        half4 main(float2 fragCoord) {
+        float4 main(float2 fragCoord) {
             float2 uv = fragCoord / iResolution;
             float2 videoUv = (uv - 0.5) * uScale + 0.5;
             if (videoUv.x >= 0.0 && videoUv.x <= 1.0 && videoUv.y >= 0.0 && videoUv.y <= 1.0) {
-                return half4(sampleFrame(videoUv), half(1.0));
+                return float4(sampleFrame(videoUv), float(1.0));
             }
 
-            half3 avgColor = half3(0.0);
+            float3 avgColor = float3(0.0);
             const int SAMPLES = 20;
             float baseSeed = 42.0;
             for (int i = 0; i < SAMPLES; i++) {
@@ -340,22 +341,22 @@ $taps
                 float y = rand(float2(seed, 0.456));
                 avgColor += sampleFrame(float2(x, y));
             }
-            avgColor /= half(float(SAMPLES));
+            avgColor /= float(float(SAMPLES));
 
             float l = luma(avgColor);
-            avgColor = mix(half3(l), avgColor, half(1.3));
-            avgColor *= half(0.30);
+            avgColor = mix(float3(l), avgColor, float(1.3));
+            avgColor *= float(0.30);
 
             float2 edgeUv = clamp(videoUv, float2(0.0), float2(1.0));
             float dist = length(videoUv - edgeUv);
             float fade = exp(-dist * 2.5);
-            avgColor *= half(fade);
+            avgColor *= float(fade);
 
             float dither = rand(uv * 1000.0) * 0.004 - 0.002;
-            avgColor = clamp(avgColor + half(dither), half(0.0), half(1.0));
+            avgColor = clamp(avgColor + float(dither), float(0.0), float(1.0));
 
             float vigR = length(uv - 0.5) * 2.0;
-            return half4(avgColor * half(uOpacity * fade * mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette)), half(1.0));
+            return float4(avgColor * float(uOpacity * fade * mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette)), float(1.0));
         }
     """.trimIndent()
 
@@ -385,28 +386,28 @@ $glowTaps
                 return rand(uv * iResolution + float2(11.0, 47.0)) - 0.5;
             }
 
-            half3 applyDither(half3 rgb, float2 uv, float flatness) {
+            float3 applyDither(float3 rgb, float2 uv, float flatness) {
                 if (uDitherNoise <= 0.0001) { return rgb; }
                 float amount = uDitherNoise * mix(0.025, 0.15, flatness);
-                return clamp(rgb + half3(half(noiseValue(uv) * amount)), 0.0, 1.0);
+                return clamp(rgb + float3(float(noiseValue(uv) * amount)), 0.0, 1.0);
             }
 
-            float edgeRisk(float2 edgeOrigin, half3 edge, float2 inwardDir, float2 orthoDir) {
-                half3 orthoA = sampleFrame(clamp(edgeOrigin + orthoDir * 0.008, float2(0.0), float2(1.0)));
-                half3 orthoB = sampleFrame(clamp(edgeOrigin - orthoDir * 0.008, float2(0.0), float2(1.0)));
-                half3 inward = sampleFrame(clamp(edgeOrigin + inwardDir * 0.014, float2(0.0), float2(1.0)));
+            float edgeRisk(float2 edgeOrigin, float3 edge, float2 inwardDir, float2 orthoDir) {
+                float3 orthoA = sampleFrame(clamp(edgeOrigin + orthoDir * 0.008, float2(0.0), float2(1.0)));
+                float3 orthoB = sampleFrame(clamp(edgeOrigin - orthoDir * 0.008, float2(0.0), float2(1.0)));
+                float3 inward = sampleFrame(clamp(edgeOrigin + inwardDir * 0.014, float2(0.0), float2(1.0)));
                 float orthoContrast = clamp(length(orthoA - orthoB) * 1.9, 0.0, 1.0);
                 float inwardContrast = clamp(length(inward - edge) * 2.1, 0.0, 1.0);
                 return clamp(orthoContrast * 0.65 + inwardContrast * 0.55, 0.0, 1.0);
             }
 
-            half3 sampleSoftGlow(float2 edgeOrigin, float2 uv, float outsideNorm) {
+            float3 sampleSoftGlow(float2 edgeOrigin, float2 uv, float outsideNorm) {
                 float jitter = rand(uv * iResolution) * 6.2831853;
                 float js = sin(jitter);
                 float jc = cos(jitter);
                 float radius = mix(0.016, 0.095, outsideNorm);
                 float2 aspectFix = float2(iResolution.y / iResolution.x, 1.0);
-                half3 acc = half3(0.0);
+                float3 acc = float3(0.0);
                 float accWeight = 0.0;
                 for (int i = 0; i < GLOW_SAMPLES; i++) {
                     float3 tap = FRAME_GLOW_TAPS[i];
@@ -417,81 +418,81 @@ $glowTaps
                         baseOffset.x * js + baseOffset.y * jc
                     ) * aspectFix;
                     float2 sampleUv = clamp(edgeOrigin + offset, float2(0.0), float2(1.0));
-                    half3 sampleRgb = sampleFrame(sampleUv);
+                    float3 sampleRgb = sampleFrame(sampleUv);
                     float weight = (1.15 - fi) * (0.8 + luma(sampleRgb));
-                    acc += sampleRgb * half(weight);
+                    acc += sampleRgb * float(weight);
                     accWeight += weight;
                 }
-                return acc / half(max(accWeight, 1e-5));
+                return acc / float(max(accWeight, 1e-5));
             }
 
-            half4 traceAnchorStrip(float2 anchorUv, half3 anchorEdge, float2 inwardDir, float2 orthoDir, float outsideNorm) {
+            float4 traceAnchorStrip(float2 anchorUv, float3 anchorEdge, float2 inwardDir, float2 orthoDir, float outsideNorm) {
                 float extendDepth = mix(0.018, 0.34, outsideNorm) * mix(0.80, 1.45, uExtendStrength);
                 float orthoScale = mix(0.026, 0.005, uDetailProtect) * (0.45 + outsideNorm * 0.85);
-                half3 acc = half3(0.0);
+                float3 acc = float3(0.0);
                 float accWeight = 0.0;
-                half3 prev = anchorEdge;
+                float3 prev = anchorEdge;
                 float coherenceAcc = 0.0;
                 for (int i = 0; i < EXTEND_STEPS; i++) {
                     float fi = float(i + 1) / float(EXTEND_STEPS);
                     float2 baseUv = clamp(anchorUv + inwardDir * (extendDepth * fi), float2(0.0), float2(1.0));
-                    half3 stripAcc = half3(0.0);
+                    float3 stripAcc = float3(0.0);
                     float stripWeight = 0.0;
                     for (int j = -ORTHO_RADIUS; j <= ORTHO_RADIUS; j++) {
                         float tapPos = float(j) / max(float(ORTHO_RADIUS), 1.0);
                         float2 sampleUv = clamp(
                             baseUv + orthoDir * orthoScale * tapPos * (0.55 + fi * 0.90),
                             float2(0.0), float2(1.0));
-                        half3 sampleRgb = sampleFrame(sampleUv);
+                        float3 sampleRgb = sampleFrame(sampleUv);
                         float nearPrev = 1.0 - clamp(length(sampleRgb - prev) * 2.0, 0.0, 1.0);
                         float nearEdge = 1.0 - clamp(length(sampleRgb - anchorEdge) * 1.6, 0.0, 1.0);
                         float tapWeight = exp(-abs(tapPos) * mix(1.2, 3.6, uDetailProtect));
                         tapWeight *= mix(0.55, 1.0, nearPrev);
                         tapWeight *= mix(0.45, 1.0, nearEdge);
-                        stripAcc += sampleRgb * half(tapWeight);
+                        stripAcc += sampleRgb * float(tapWeight);
                         stripWeight += tapWeight;
                     }
-                    half3 sampleRgb = stripAcc / half(max(stripWeight, 1e-5));
+                    float3 sampleRgb = stripAcc / float(max(stripWeight, 1e-5));
                     float edgeSimilarity = 1.0 - clamp(length(sampleRgb - anchorEdge) * 1.8, 0.0, 1.0);
                     float stepSimilarity = 1.0 - clamp(length(sampleRgb - prev) * 2.1, 0.0, 1.0);
                     float weight = mix(1.35, 0.25, fi) * mix(0.60, 1.0, edgeSimilarity);
-                    acc += sampleRgb * half(weight);
+                    acc += sampleRgb * float(weight);
                     accWeight += weight;
                     coherenceAcc += stepSimilarity * edgeSimilarity;
                     prev = sampleRgb;
                 }
-                half3 extendRgb = acc / half(max(accWeight, 1e-5));
+                float3 extendRgb = acc / float(max(accWeight, 1e-5));
                 float coherence = clamp(coherenceAcc / float(EXTEND_STEPS), 0.0, 1.0);
                 coherence = pow(coherence, mix(0.85, 2.8, uDetailProtect));
-                return half4(extendRgb, half(coherence));
+                return float4(extendRgb, float(coherence));
             }
 
-            half4 samplePredictiveFill(float2 edgeOrigin, half3 edgeRgb, float2 inwardDir, float2 orthoDir, float outsideNorm) {
+            float4 samplePredictiveFill(float2 edgeOrigin, float3 edgeRgb, float2 inwardDir, float2 orthoDir, float outsideNorm) {
                 float anchorSpan = mix(0.010, 0.070, outsideNorm) * mix(0.55, 1.20, uExtendStrength);
-                half3 acc = half3(0.0);
+                float3 acc = float3(0.0);
                 float accWeight = 0.0;
                 float confidenceAcc = 0.0;
                 for (int k = -ANCHOR_RADIUS; k <= ANCHOR_RADIUS; k++) {
                     float anchorNorm = ANCHOR_RADIUS > 0 ? float(k) / float(ANCHOR_RADIUS) : 0.0;
                     float2 anchorUv = clamp(edgeOrigin + orthoDir * anchorSpan * anchorNorm, float2(0.0), float2(1.0));
-                    half3 anchorEdge = sampleFrame(anchorUv);
-                    half4 traced = traceAnchorStrip(anchorUv, anchorEdge, inwardDir, orthoDir, outsideNorm);
+                    float3 anchorEdge = sampleFrame(anchorUv);
+                    float4 traced = traceAnchorStrip(anchorUv, anchorEdge, inwardDir, orthoDir, outsideNorm);
                     float centerWeight = exp(-abs(anchorNorm) * mix(1.0, 3.2, uDetailProtect));
                     float anchorSimilarity = 1.0 - clamp(length(anchorEdge - edgeRgb) * 2.3, 0.0, 1.0);
                     float confidence = mix(float(traced.a), float(traced.a) * anchorSimilarity, 0.6);
                     float weight = centerWeight * mix(0.35, 1.0, anchorSimilarity) * mix(0.30, 1.0, confidence);
-                    acc += traced.rgb * half(weight);
+                    acc += traced.rgb * float(weight);
                     accWeight += weight;
                     confidenceAcc += confidence * weight;
                 }
-                return half4(acc / half(max(accWeight, 1e-5)), half(confidenceAcc / max(accWeight, 1e-5)));
+                return float4(acc / float(max(accWeight, 1e-5)), float(confidenceAcc / max(accWeight, 1e-5)));
             }
 
-            half4 main(float2 fragCoord) {
+            float4 main(float2 fragCoord) {
                 float2 uv = fragCoord / iResolution;
                 float2 videoUv = (uv - 0.5) * uScale + 0.5;
                 if (videoUv.x >= 0.0 && videoUv.x <= 1.0 && videoUv.y >= 0.0 && videoUv.y <= 1.0) {
-                    return half4(sampleFrame(videoUv), half(1.0));
+                    return float4(sampleFrame(videoUv), float(1.0));
                 }
 
                 float2 edgeOrigin = clamp(videoUv, float2(0.0), float2(1.0));
@@ -508,25 +509,25 @@ $glowTaps
                 float distToEdge = horizontal ? abs(overflow.x) : abs(overflow.y);
                 float outsideNorm = clamp(distToEdge / barExtent, 0.0, 1.0);
 
-                half3 edgeRgb = sampleFrame(edgeOrigin);
+                float3 edgeRgb = sampleFrame(edgeOrigin);
                 float risk = edgeRisk(edgeOrigin, edgeRgb, inwardDir, orthoDir);
-                half4 extendResult = samplePredictiveFill(edgeOrigin, edgeRgb, inwardDir, orthoDir, outsideNorm);
-                half3 glowRgb = sampleSoftGlow(edgeOrigin, uv, outsideNorm);
+                float4 extendResult = samplePredictiveFill(edgeOrigin, edgeRgb, inwardDir, orthoDir, outsideNorm);
+                float3 glowRgb = sampleSoftGlow(edgeOrigin, uv, outsideNorm);
 
                 float confidence = clamp(float(extendResult.a) * (1.0 - risk * mix(0.45, 0.88, uDetailProtect)), 0.0, 1.0);
                 float fallbackMix = clamp(
                     uGlowMix + (1.0 - confidence) * mix(0.18, 0.75, uDetailProtect) + risk * mix(0.05, 0.28, uDetailProtect),
                     0.0, 1.0);
-                half3 fillRgb = mix(extendResult.rgb, glowRgb, half(fallbackMix));
-                fillRgb = mix(edgeRgb, fillRgb, half(smoothstep(0.18, 0.98, outsideNorm)));
+                float3 fillRgb = mix(extendResult.rgb, glowRgb, float(fallbackMix));
+                fillRgb = mix(edgeRgb, fillRgb, float(smoothstep(0.18, 0.98, outsideNorm)));
 
                 float vigR = length(uv - 0.5) * 2.0;
-                fillRgb *= half(mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette));
+                fillRgb *= float(mix(1.0, smoothstep(1.3, 0.1, vigR), uVignette));
 
                 float flatness = clamp((1.0 - risk) * (0.55 + outsideNorm * 0.45), 0.0, 1.0);
                 fillRgb = applyDither(fillRgb, uv, flatness);
 
-                return half4(fillRgb * half(uOpacity), half(1.0));
+                return float4(fillRgb * float(uOpacity), float(1.0));
             }
         """.trimIndent()
     }

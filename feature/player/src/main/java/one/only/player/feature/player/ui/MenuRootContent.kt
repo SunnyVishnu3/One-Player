@@ -27,10 +27,12 @@ import one.only.player.core.ui.designsystem.NextIcons
 fun MenuRootContent(
     isPipSupported: Boolean,
     isTakingScreenshot: Boolean,
+    isAmoledThemeEnabled: Boolean,
     onNavigate: (MenuRoute) -> Unit,
     onPictureInPictureClick: () -> Unit,
     onScreenshotClick: () -> Unit,
     onPlayInBackgroundClick: () -> Unit,
+    onAmoledThemeChange: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -76,6 +78,12 @@ fun MenuRootContent(
             onClick = { onNavigate(MenuRoute.SleepTimer) },
         )
         MenuItemRow(
+            icon = NextIcons.Style,
+            text = stringResource(R.string.seekbar_style),
+            testTag = "menu_item_seekbar_style",
+            onClick = { onNavigate(MenuRoute.SeekbarStyle) },
+        )
+        MenuItemRow(
             icon = NextIcons.History,
             text = stringResource(R.string.playback_marks),
             testTag = "menu_item_playback_marks",
@@ -104,6 +112,13 @@ fun MenuRootContent(
             text = stringResource(R.string.mirror_video),
             testTag = "menu_item_mirror_video",
             onClick = { onNavigate(MenuRoute.MirrorVideo) },
+        )
+        MenuItemSwitch(
+            icon = NextIcons.DarkMode,
+            text = stringResource(R.string.amoled_theme),
+            testTag = "menu_item_amoled_theme",
+            isChecked = isAmoledThemeEnabled,
+            onCheckedChange = onAmoledThemeChange,
         )
         if (isPipSupported) {
             MenuItemRow(
@@ -175,6 +190,50 @@ private fun MenuItemRow(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MenuItemSwitch(
+    icon: ImageVector,
+    text: String,
+    testTag: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    isEnabled: Boolean = true,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .testTag(testTag),
+        onClick = { onCheckedChange(!isChecked) },
+        enabled = isEnabled,
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp), // Less padding vertically due to switch height
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            androidx.compose.material3.Switch(
+                checked = isChecked,
+                onCheckedChange = null, // handled by Surface click
             )
         }
     }

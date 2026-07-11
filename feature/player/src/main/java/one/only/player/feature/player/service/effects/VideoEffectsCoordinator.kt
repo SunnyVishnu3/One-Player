@@ -121,8 +121,6 @@ internal class VideoEffectsCoordinator(
         )
     }
 
-
-
     fun updateAvailability(player: ExoPlayer) {
         val currentMediaItem = player.currentMediaItem ?: return
         val isVideoEffectsAvailable = isAvailable()

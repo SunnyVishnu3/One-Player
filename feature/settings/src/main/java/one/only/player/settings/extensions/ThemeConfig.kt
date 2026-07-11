@@ -11,6 +11,7 @@ fun ThemeConfig.name(): String {
         ThemeConfig.SYSTEM -> R.string.follow_system_theme
         ThemeConfig.OFF -> R.string.light_theme
         ThemeConfig.ON -> R.string.dark_theme
+        ThemeConfig.AMOLED -> R.string.amoled_theme
     }
 
     return stringResource(id = stringRes)

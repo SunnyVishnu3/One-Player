@@ -21,6 +21,7 @@ import one.only.player.core.model.PlayerIconStyle
 import one.only.player.core.model.PlayerPreferences
 import one.only.player.core.model.Resume
 import one.only.player.core.model.ScreenOrientation
+import one.only.player.core.model.SeekbarStyle
 
 @HiltViewModel
 class PlayerPreferencesViewModel @Inject constructor(
@@ -62,6 +63,8 @@ class PlayerPreferencesViewModel @Inject constructor(
             PlayerPreferencesUiEvent.ToggleDimVideoWhenControlsVisible -> toggleDimVideoWhenControlsVisible()
             PlayerPreferencesUiEvent.ToggleShowThumbnailPreview -> toggleShowThumbnailPreview()
             PlayerPreferencesUiEvent.TogglePlayerControlLabels -> togglePlayerControlLabels()
+            PlayerPreferencesUiEvent.ToggleUseLegacySeekbar -> toggleUseLegacySeekbar()
+            is PlayerPreferencesUiEvent.UpdateSeekbarStyle -> updateSeekbarStyle(event.value)
             is PlayerPreferencesUiEvent.UpdateHiddenPlayerControls -> updateHiddenPlayerControls(event.value)
             is PlayerPreferencesUiEvent.UpdateAmbientMode -> updateAmbientMode(event.value)
             is PlayerPreferencesUiEvent.UpdateAmbientQuality -> updateAmbientQuality(event.value)
@@ -116,6 +119,30 @@ class PlayerPreferencesViewModel @Inject constructor(
             preferencesRepository.updatePlayerPreferences {
                 it.copy(shouldAutoPlayInBackground = !it.shouldAutoPlayInBackground)
             }
+        }
+    }
+
+    fun updateEnableIntroDb(enable: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { it.copy(enableIntroDb = enable) }
+        }
+    }
+
+    fun updateDetectIntroOutroFromChapters(detect: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { it.copy(detectIntroOutroFromChapters = detect) }
+        }
+    }
+
+    fun updateAutoSkipIntro(autoSkip: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { it.copy(autoSkipIntro = autoSkip) }
+        }
+    }
+
+    fun updateAutoSkipOutro(autoSkip: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences { it.copy(autoSkipOutro = autoSkip) }
         }
     }
 
@@ -225,6 +252,22 @@ class PlayerPreferencesViewModel @Inject constructor(
         }
     }
 
+    private fun toggleUseLegacySeekbar() {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(useLegacySeekbar = !it.useLegacySeekbar)
+            }
+        }
+    }
+
+    private fun updateSeekbarStyle(value: SeekbarStyle) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(seekbarStyle = value)
+            }
+        }
+    }
+
     private fun updateAmbientMode(value: AmbientMode) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
@@ -262,6 +305,7 @@ sealed interface PlayerPreferenceDialog {
     data object ControlButtonsDialog : PlayerPreferenceDialog
     data object PlayerIconStyleDialog : PlayerPreferenceDialog
     data object ControlsStyleDialog : PlayerPreferenceDialog
+    data object SeekbarStyleDialog : PlayerPreferenceDialog
     data object AmbientModeDialog : PlayerPreferenceDialog
     data object AmbientQualityDialog : PlayerPreferenceDialog
 }
@@ -278,6 +322,8 @@ sealed interface PlayerPreferencesUiEvent {
     data object TogglePlayerControlLabels : PlayerPreferencesUiEvent
     data object ToggleDimVideoWhenControlsVisible : PlayerPreferencesUiEvent
     data object ToggleShowThumbnailPreview : PlayerPreferencesUiEvent
+    data object ToggleUseLegacySeekbar : PlayerPreferencesUiEvent
+    data class UpdateSeekbarStyle(val value: SeekbarStyle) : PlayerPreferencesUiEvent
     data class UpdatePreferredPlayerOrientation(val value: ScreenOrientation) : PlayerPreferencesUiEvent
     data class UpdatePreferredControlButtonsPosition(val value: ControlButtonsPosition) : PlayerPreferencesUiEvent
     data class UpdateDefaultPlaybackSpeed(val value: Float) : PlayerPreferencesUiEvent

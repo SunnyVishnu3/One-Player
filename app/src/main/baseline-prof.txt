@@ -1,0 +1,11 @@
+# Project source
+Lone/only/player/**;
+HSPLone/only/player/**;
+
+# AndroidX and UI
+Landroidx/**;
+HSPLandroidx/**;
+Lcom/google/android/material/**;
+HSPLcom/google/android/material/**;
+Lsh/calvin/reorderable/**;
+HSPLsh/calvin/reorderable/**;
