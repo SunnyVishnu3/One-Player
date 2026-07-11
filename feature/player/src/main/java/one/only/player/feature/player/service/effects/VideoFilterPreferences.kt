@@ -40,21 +40,7 @@ data class VideoFilterPreferences(
         )
     }
 
-    fun shouldCreateEffect(): Boolean = shouldApply &&
-        (
-            isBrightnessEnabled &&
-                brightness != PlayerPreferences.DEFAULT_VIDEO_BRIGHTNESS ||
-                isContrastEnabled &&
-                contrast != PlayerPreferences.DEFAULT_VIDEO_CONTRAST ||
-                isSaturationEnabled &&
-                saturation != PlayerPreferences.DEFAULT_VIDEO_SATURATION ||
-                isHueEnabled &&
-                hue != PlayerPreferences.DEFAULT_VIDEO_HUE ||
-                isGammaEnabled &&
-                gamma != PlayerPreferences.DEFAULT_VIDEO_GAMMA ||
-                isSharpeningEnabled &&
-                sharpening != PlayerPreferences.DEFAULT_VIDEO_SHARPENING
-            )
+    fun shouldCreateEffect(): Boolean = shouldApply
 
     companion object {
         fun default(): VideoFilterPreferences = VideoFilterPreferences(

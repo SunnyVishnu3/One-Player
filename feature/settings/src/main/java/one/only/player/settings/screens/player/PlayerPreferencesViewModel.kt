@@ -58,6 +58,7 @@ class PlayerPreferencesViewModel @Inject constructor(
             is PlayerPreferencesUiEvent.UpdatePlayerIconStyle -> updatePlayerIconStyle(event.value)
             is PlayerPreferencesUiEvent.UpdateControlsStyle -> updateControlsStyle(event.value)
             PlayerPreferencesUiEvent.ToggleDimVideoWhenControlsVisible -> toggleDimVideoWhenControlsVisible()
+            PlayerPreferencesUiEvent.ToggleShowThumbnailPreview -> toggleShowThumbnailPreview()
             PlayerPreferencesUiEvent.TogglePlayerControlLabels -> togglePlayerControlLabels()
             is PlayerPreferencesUiEvent.UpdateHiddenPlayerControls -> updateHiddenPlayerControls(event.value)
         }
@@ -212,6 +213,14 @@ class PlayerPreferencesViewModel @Inject constructor(
         }
     }
 
+    private fun toggleShowThumbnailPreview() {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(shouldShowThumbnailPreview = !it.shouldShowThumbnailPreview)
+            }
+        }
+    }
+
     private fun updateHiddenPlayerControls(value: Set<PlayerControl>) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences {
@@ -245,6 +254,8 @@ sealed interface PlayerPreferencesUiEvent {
     data object ToggleRememberBrightnessLevel : PlayerPreferencesUiEvent
     data object ToggleRememberPlayerScreenOrientation : PlayerPreferencesUiEvent
     data object TogglePlayerControlLabels : PlayerPreferencesUiEvent
+    data object ToggleDimVideoWhenControlsVisible : PlayerPreferencesUiEvent
+    data object ToggleShowThumbnailPreview : PlayerPreferencesUiEvent
     data class UpdatePreferredPlayerOrientation(val value: ScreenOrientation) : PlayerPreferencesUiEvent
     data class UpdatePreferredControlButtonsPosition(val value: ControlButtonsPosition) : PlayerPreferencesUiEvent
     data class UpdateDefaultPlaybackSpeed(val value: Float) : PlayerPreferencesUiEvent

@@ -56,6 +56,7 @@ data class PlayerPreferences(
     val controllerAutoHidePreset: ControllerAutoHidePreset = ControllerAutoHidePreset.CUSTOM,
     val controllerAutoHideTimeout: Int = DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT,
     val shouldDimVideoWhenControlsVisible: Boolean = true,
+    val shouldShowThumbnailPreview: Boolean = true,
     val controlsStyle: PlayerControlsStyle = PlayerControlsStyle.MODERN,
     val controlButtonsPosition: ControlButtonsPosition = ControlButtonsPosition.LEFT,
     val playerControlsLayout: PlayerControlsLayout = PlayerControlsLayout(),

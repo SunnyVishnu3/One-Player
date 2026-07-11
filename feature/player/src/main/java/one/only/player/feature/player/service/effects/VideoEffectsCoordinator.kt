@@ -29,7 +29,6 @@ internal class VideoEffectsCoordinator(
     private var activeFilterEffect: VideoFiltersEffect? = null
     private var activeAmbientEffect: AmbientVideoEffect? = null
     private var isCurrentVideoHdr = false
-    private var hasRenderedFirstFrameForCurrentItem = false
     private var pendingJob: Job? = null
     private var transition = VideoFilterTransition.default()
 
@@ -54,7 +53,6 @@ internal class VideoEffectsCoordinator(
         currentFormat = null
         currentDecoderName = null
         isCurrentVideoHdr = false
-        hasRenderedFirstFrameForCurrentItem = false
         updateAvailability(player ?: return)
     }
 
@@ -80,12 +78,8 @@ internal class VideoEffectsCoordinator(
         player: ExoPlayer?,
         format: Format,
     ) {
-        val wasVideoHdr = isCurrentVideoHdr
         currentFormat = format
         isCurrentVideoHdr = format.isHdrVideoFormat()
-        if (wasVideoHdr != isCurrentVideoHdr || isEffectActive) {
-            player?.let { apply(it, currentPreferencesProvider(), force = true) }
-        }
     }
 
     fun markFirstFrameRendered(
@@ -94,7 +88,6 @@ internal class VideoEffectsCoordinator(
         preferences: PlayerPreferences,
     ) {
         isCurrentVideoHdr = format?.isHdrVideoFormat() == true
-        hasRenderedFirstFrameForCurrentItem = true
         apply(player, preferences, force = true)
     }
 
@@ -166,7 +159,7 @@ internal class VideoEffectsCoordinator(
         Logger.debug(TAG, "Video effects availability: available=$isVideoEffectsAvailable decoder=$activeDecoderPriority")
     }
 
-    fun isAvailable(): Boolean = shouldApplyVideoEffects(activeDecoderPriority) && !isCurrentVideoHdr
+    fun isAvailable(): Boolean = shouldApplyVideoEffects(activeDecoderPriority)
 
     private fun schedule(
         player: ExoPlayer,
@@ -257,17 +250,6 @@ internal class VideoEffectsCoordinator(
             isAmbientEnabled = isAmbientEnabled,
             ambientTargetAspectRatio = ambientTargetAspectRatio,
         )
-        if (!hasRenderedFirstFrameForCurrentItem && activeFilterEffect == null && activeAmbientEffect == null && effects.isNotEmpty()) {
-            currentState = VideoEffectsState(
-                filters = videoFilters,
-                decoderPriority = decoderPriority,
-                isAmbientEnabled = isAmbientEnabled,
-                ambientTargetAspectRatio = ambientTargetAspectRatio,
-                isPipelineInitialized = false,
-            )
-            Logger.debug(TAG, "Defer setVideoEffects until first frame to resolve HDR state")
-            return
-        }
         if (effects.isEmpty() && activeFilterEffect == null && activeAmbientEffect == null) {
             currentState = VideoEffectsState(
                 filters = videoFilters,
@@ -331,7 +313,7 @@ internal class VideoEffectsCoordinator(
     private fun shouldUseFilterEffect(
         filters: VideoFilterPreferences,
         decoderPriority: DecoderPriority,
-    ): Boolean = shouldApplyVideoEffects(decoderPriority) && !isCurrentVideoHdr && filters.shouldCreateEffect()
+    ): Boolean = shouldApplyVideoEffects(decoderPriority) && filters.shouldCreateEffect()
 
     private fun shouldUseAmbientEffect(
         isEnabled: Boolean,

@@ -214,16 +214,35 @@ internal class VideoFiltersEffect(
               vec3 sourceColor = center.rgb;
 
               if (uSharpness > 0.0) {
-                vec3 north = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, -uTexelSize.y)).rgb;
-                vec3 south = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, uTexelSize.y)).rgb;
-                vec3 west = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, 0.0)).rgb;
-                vec3 east = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, 0.0)).rgb;
-                vec3 northwest = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, -uTexelSize.y)).rgb;
-                vec3 northeast = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, -uTexelSize.y)).rgb;
-                vec3 southwest = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, uTexelSize.y)).rgb;
-                vec3 southeast = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, uTexelSize.y)).rgb;
-                vec3 blur = center.rgb * 0.25 + (north + south + west + east) * 0.125 + (northwest + northeast + southwest + southeast) * 0.0625;
-                sourceColor = clamp(center.rgb + (center.rgb - blur) * uSharpness, 0.0, 1.0);
+                mediump vec4 p  = center;
+                mediump vec4 tl = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, -uTexelSize.y));
+                mediump vec4 tc = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, -uTexelSize.y));
+                mediump vec4 tr = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, -uTexelSize.y));
+                mediump vec4 ml = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, 0.0));
+                mediump vec4 mr = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, 0.0));
+                mediump vec4 bl = texture2D(uTexSampler, vTexSamplingCoord + vec2(-uTexelSize.x, uTexelSize.y));
+                mediump vec4 bc = texture2D(uTexSampler, vTexSamplingCoord + vec2(0.0, uTexelSize.y));
+                mediump vec4 br = texture2D(uTexSampler, vTexSamplingCoord + vec2(uTexelSize.x, uTexelSize.y));
+
+                mediump vec4 blur = (tl + tr + bl + br + 2.0*(tc + ml + mr + bc) + 4.0*p) / 16.0;
+
+                mediump float l_p = dot(p.rgb, vec3(0.299, 0.587, 0.114));
+                mediump float l_b = dot(blur.rgb, vec3(0.299, 0.587, 0.114));
+                mediump float diff = l_p - l_b;
+
+                mediump float c = diff * (uSharpness * 0.12);
+                mediump float c_t = abs(c);
+                if (c_t > 0.001) {
+                    c_t = pow(clamp((c_t - 0.001) / 0.099, 0.0, 1.0), 0.6) * 0.099 + 0.001;
+                }
+                c_t = c_t * sign(c);
+
+                mediump float d = min(diff, 0.0) * (uSharpness * 0.3);
+
+                mediump vec4 mn = min(min(min(tl, tc), min(tr, ml)), min(min(mr, bl), min(bc, br)));
+                mediump vec4 mx = max(max(max(tl, tc), max(tr, ml)), max(max(mr, bl), max(bc, br)));
+
+                sourceColor = clamp(p.rgb + vec3(c_t + d), mn.rgb, mx.rgb);
               }
 
               gl_FragColor = vec4(applyColorFilters(sourceColor), center.a);

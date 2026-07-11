@@ -90,6 +90,7 @@ fun ControlsTopView(
     onSleepTimerClick: (() -> Unit)? = null,
     sleepTimerState: SleepTimerState? = null,
     onBackClick: () -> Unit,
+    onStatsClick: () -> Unit = {},
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val isLandscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -222,6 +223,17 @@ fun ControlsTopView(
                 Title()
                 BackButton()
             }
+        }
+        androidx.compose.material3.IconButton(
+            modifier = Modifier.androidx.compose.ui.platform.testTag("btn_stats"),
+            onClick = onStatsClick,
+        ) {
+            Icon(
+                modifier = Modifier.androidx.compose.foundation.layout.size(24.dp),
+                imageVector = one.only.player.core.ui.designsystem.NextIcons.Info,
+                contentDescription = "Stats",
+                tint = Color.White,
+            )
         }
     }
 }

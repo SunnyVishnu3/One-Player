@@ -197,6 +197,8 @@ fun ControlsBottomView(
                 onSeek(it.toLong())
             },
             onSeekFinished = { onSeekEnd() },
+            isSeeking = isSeeking,
+            thumbnailBitmap = thumbnailBitmap,
         )
         Row(
             modifier = Modifier
@@ -302,15 +304,28 @@ private fun PlayerSeekbar(
     duration: Float,
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
+    isSeeking: Boolean = false,
+    thumbnailBitmap: android.graphics.Bitmap? = null,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        MaterialYouSlider(
-            modifier = modifier.fillMaxWidth(),
-            value = position,
-            valueRange = 0f..duration,
-            onValueChange = onSeek,
-            onValueChangeFinished = onSeekFinished,
-        )
+        Column(modifier = modifier.fillMaxWidth()) {
+            SeekThumbnailPreviewBubble(
+                position = position,
+                duration = duration,
+                visible = isSeeking,
+                bitmap = thumbnailBitmap,
+                isLoading = false,
+                isPortrait = true,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            MaterialYouSlider(
+                modifier = Modifier.fillMaxWidth(),
+                value = position,
+                valueRange = 0f..duration,
+                onValueChange = onSeek,
+                onValueChangeFinished = onSeekFinished,
+            )
+        }
     }
 }
 

@@ -134,6 +134,14 @@ private fun PlayerPreferencesContent(
                     isChecked = uiState.preferences.shouldDimVideoWhenControlsVisible,
                     onClick = { onEvent(PlayerPreferencesUiEvent.ToggleDimVideoWhenControlsVisible) },
                 )
+                PreferenceSwitch(
+                    modifier = Modifier.testTag("switch_settings_player_show_thumbnail_preview"),
+                    title = stringResource(id = R.string.show_thumbnail_preview),
+                    description = stringResource(id = R.string.show_thumbnail_preview_description),
+                    icon = NextIcons.Image,
+                    isChecked = uiState.preferences.shouldShowThumbnailPreview,
+                    onClick = { onEvent(PlayerPreferencesUiEvent.ToggleShowThumbnailPreview) },
+                )
                 ClickablePreferenceItem(
                     modifier = Modifier.testTag("item_settings_player_screen_orientation"),
                     title = stringResource(id = R.string.player_screen_orientation),

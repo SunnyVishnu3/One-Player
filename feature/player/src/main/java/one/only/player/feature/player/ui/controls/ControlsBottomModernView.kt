@@ -64,6 +64,8 @@ fun ControlsBottomModernView(
     onPlaybackSpeedClick: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    isSeeking: Boolean = false,
+    thumbnailBitmap: android.graphics.Bitmap? = null,
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val controlsVisibilityState = LocalControlsVisibilityState.current
@@ -89,6 +91,8 @@ fun ControlsBottomModernView(
                 onSeek(it.toLong())
             },
             onSeekFinished = { onSeekEnd() },
+            isSeeking = isSeeking,
+            thumbnailBitmap = thumbnailBitmap,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -201,37 +205,50 @@ private fun ModernSeekbar(
     duration: Float,
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
+    isSeeking: Boolean = false,
+    thumbnailBitmap: android.graphics.Bitmap? = null,
 ) {
     val accentColor = MaterialTheme.colorScheme.primary
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Slider(
-            modifier = modifier.fillMaxWidth(),
-            value = position.coerceIn(0f, duration.coerceAtLeast(0f)),
-            valueRange = 0f..duration.coerceAtLeast(0f),
-            onValueChange = onSeek,
-            onValueChangeFinished = onSeekFinished,
-            thumb = {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .border(2.dp, Color.White, CircleShape)
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(accentColor),
-                )
-            },
-            track = { sliderState ->
-                SliderDefaults.Track(
-                    sliderState = sliderState,
-                    modifier = Modifier.height(4.dp),
-                    colors = SliderDefaults.colors(
-                        activeTrackColor = accentColor,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.3f),
-                    ),
-                    thumbTrackGapSize = 0.dp,
-                    drawStopIndicator = null,
-                )
-            },
-        )
+        Column(modifier = modifier.fillMaxWidth()) {
+            SeekThumbnailPreviewBubble(
+                position = position,
+                duration = duration,
+                visible = isSeeking,
+                bitmap = thumbnailBitmap,
+                isLoading = false,
+                isPortrait = true,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            Slider(
+                modifier = Modifier.fillMaxWidth(),
+                value = position.coerceIn(0f, duration.coerceAtLeast(0f)),
+                valueRange = 0f..duration.coerceAtLeast(0f),
+                onValueChange = onSeek,
+                onValueChangeFinished = onSeekFinished,
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .border(2.dp, Color.White, CircleShape)
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(accentColor),
+                    )
+                },
+                track = { sliderState ->
+                    SliderDefaults.Track(
+                        sliderState = sliderState,
+                        modifier = Modifier.height(4.dp),
+                        colors = SliderDefaults.colors(
+                            activeTrackColor = accentColor,
+                            inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                        ),
+                        thumbTrackGapSize = 0.dp,
+                        drawStopIndicator = null,
+                    )
+                },
+            )
+        }
     }
 }

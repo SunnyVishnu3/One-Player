@@ -31,6 +31,7 @@ fun ControlsTopModernView(
     title: String,
     onBackClick: () -> Unit,
     onMenuClick: () -> Unit,
+    onStatsClick: () -> Unit = {},
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     Row(
@@ -61,6 +62,17 @@ fun ControlsTopModernView(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        IconButton(
+            modifier = Modifier.testTag("btn_stats"),
+            onClick = onStatsClick,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = NextIcons.Info,
+                contentDescription = "Stats",
+                tint = Color.White,
+            )
+        }
         IconButton(
             modifier = Modifier.testTag("btn_menu"),
             onClick = onMenuClick,

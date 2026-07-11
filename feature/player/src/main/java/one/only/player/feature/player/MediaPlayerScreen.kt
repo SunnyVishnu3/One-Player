@@ -146,6 +146,7 @@ import one.only.player.feature.player.state.rememberVolumeAndBrightnessGestureSt
 import one.only.player.feature.player.state.rememberVolumeState
 import one.only.player.feature.player.state.seekAmountFormatted
 import one.only.player.feature.player.state.seekToPositionFormated
+import one.only.player.feature.player.thumbnail.rememberVideoThumbnailRetriever
 import one.only.player.feature.player.ui.AudioTrackSelectorContent
 import one.only.player.feature.player.ui.DecoderPrioritySelectorContent
 import one.only.player.feature.player.ui.DoubleTapIndicator
@@ -294,6 +295,17 @@ internal fun MediaPlayerScreen(
     var pendingRestoredVolumePercentage by remember { mutableStateOf<Int?>(null) }
     val errorState = rememberErrorState(player = player)
 
+    val thumbnailRetriever = rememberVideoThumbnailRetriever(uri = player.currentMediaItem?.localConfiguration?.uri)
+    val thumbnailBitmap by thumbnailRetriever.thumbnailState.collectAsStateWithLifecycle()
+    val isSeeking = seekGestureState.pendingSeekPosition != null && playerPreferences.shouldShowThumbnailPreview
+
+    LaunchedEffect(seekGestureState.pendingSeekPosition, playerPreferences.shouldShowThumbnailPreview) {
+        val position = seekGestureState.pendingSeekPosition
+        if (position != null && playerPreferences.shouldShowThumbnailPreview) {
+            thumbnailRetriever.getThumbnailAtTime(position)
+        }
+    }
+
     DisposableEffect(player) {
         viewModel.updatePlaybackMarkMediaItem(player.currentMediaItem)
         val listener = object : Player.Listener {
@@ -402,6 +414,7 @@ internal fun MediaPlayerScreen(
     var videoFiltersInitialPreferences by remember { mutableStateOf<PlayerPreferences?>(null) }
     var subtitleStylePreviewPreferences by remember { mutableStateOf<PlayerPreferences?>(null) }
     var isAmbienceModeEnabled by remember { mutableStateOf(false) }
+    var isStatsVisible by remember { mutableStateOf(false) }
     var isVideoMirrored by remember { mutableStateOf(false) }
     val activePlayerPreferences = subtitleStylePreviewPreferences ?: playerPreferences
     val videoFiltersUnavailableMessage = stringResource(coreUiR.string.video_filters_unavailable_software_decoder)
@@ -1071,6 +1084,7 @@ internal fun MediaPlayerScreen(
                                             controlsVisibilityState.hideControls()
                                             menuRouteStack = listOf(MenuRoute.Root)
                                         },
+                                        onStatsClick = { isStatsVisible = !isStatsVisible },
                                     )
                                 } else {
                                     ControlsTopView(
@@ -1127,6 +1141,7 @@ internal fun MediaPlayerScreen(
                                                 onBackClick()
                                             }
                                         },
+                                        onStatsClick = { isStatsVisible = !isStatsVisible },
                                         onSleepTimerClick = {
                                             if (isCustomizingControls) {
                                                 toggleControlVisibility(PlayerControl.SLEEP_TIMER)
@@ -1285,6 +1300,8 @@ internal fun MediaPlayerScreen(
                                         onPlaybackSpeedClick = { openOverlayPanel(OverlayView.PLAYBACK_SPEED) },
                                         onSeek = seekGestureState::onSeek,
                                         onSeekEnd = seekGestureState::onSeekEnd,
+                                        isSeeking = isSeeking,
+                                        thumbnailBitmap = thumbnailBitmap,
                                     )
                                 } else {
                                     ControlsBottomView(
@@ -1449,6 +1466,8 @@ internal fun MediaPlayerScreen(
                                                 pictureInPictureState.enterPictureInPictureMode()
                                             }
                                         },
+                                        isSeeking = isSeeking,
+                                        thumbnailBitmap = thumbnailBitmap,
                                     )
                                 }
                             }
@@ -1558,6 +1577,13 @@ internal fun MediaPlayerScreen(
                                 Text(text = stringResource(coreUiR.string.cancel))
                             }
                         }
+                    }
+
+                    if (isStatsVisible) {
+                        one.only.player.feature.player.ui.DeviceStatsOverlay(
+                            player = player,
+                            modifier = Modifier.align(Alignment.TopEnd).padding(top = 72.dp, end = 16.dp),
+                        )
                     }
                 }
             }
